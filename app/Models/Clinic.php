@@ -42,6 +42,7 @@ class Clinic extends Model
         'calendar_end_time' => '18:00',
         'slot_duration' => 30, // minutes
         'language' => 'fr',
+        "queue_mode" => "fifo"
     ];
 
 

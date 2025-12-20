@@ -1,36 +1,26 @@
-
 <li class="nav-item">
-    <a href="#" class="nav-link">
-        <i class="fa-solid fa-calendar-days"></i> Agenda
-    </a>
-</li>
-
-<li class="nav-item">
-    <a href="{{ route('services.index') }}" class="nav-link">
-        <i class="fa-solid fa-users"></i> Appointments
-    </a>
-</li>
-
-<li class="nav-item">
-    <a href="{{ route('patients.index') }}" class="nav-link">
-        <i class="fa-solid fa-users"></i> Patient Search
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ route('services.index') }}" class="nav-link">
-        <i class="fa-solid fa-users"></i> Services
-    </a>
-</li>
-
-<li class="nav-item">
-    <a href="{{ route('secretaries.index') }}" class="nav-link {{ request()->routeIs('secretaries.*') ? 'active' : '' }}">
-        <i class="fa-solid fa-id-badge"></i> My Staff
-    </a>
-</li>
-
-<li class="nav-item">
-    <a href="#" class="nav-link">
+    <a href="{{ route('appointments.index') }}"
+        class="nav-link {{ request()->routeIs('appointments.index') ? 'active' : '' }}">
         <i class="fa-solid fa-clipboard-list"></i> Appointments
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('patients.index') }}" class="nav-link {{ request()->routeIs('patients.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-users"></i> Patients
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-briefcase-medical"></i> Services
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('secretaries.index') }}"
+        class="nav-link {{ request()->routeIs('secretaries.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-id-badge"></i> My Staff
     </a>
 </li>
 

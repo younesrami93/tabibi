@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Traits\Blameable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Appointment extends Model
 {
-    use HasFactory, SoftDeletes,Blameable;
+    use HasFactory, SoftDeletes, Blameable;
 
     protected $guarded = [];
 
@@ -36,6 +37,12 @@ class Appointment extends Model
     {
         return $this->belongsToMany(MedicalService::class, 'appointment_service')
             ->withPivot('price');
+    }
+    // In Appointment.php
+
+    public function history(): HasMany
+    {
+        return $this->hasMany(AppointmentHistory::class)->orderBy('created_at', 'desc');
     }
 
     // "Control" Logic: Is this a follow-up?

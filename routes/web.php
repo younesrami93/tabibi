@@ -52,20 +52,20 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:doctor,secretary')->group(function () {
         Route::resource('patients', PatientController::class);
 
+        Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+        Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+
         Route::put('/appointments/{id}/complete-control', [AppointmentController::class, 'markControlDone'])
             ->name('appointments.complete_control');
 
-        Route::get('/api/patients/search', function (Request $request) {
-            $search = $request->query('q');
-            return Patient::where('clinic_id', Auth::user()->clinic_id)
-                ->where(function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%$search%")
-                        ->orWhere('last_name', 'like', "%$search%")
-                        ->orWhere('phone', 'like', "%$search%");
-                })
-                ->limit(10)
-                ->get(['id', 'first_name', 'last_name', 'phone']);
-        })->name('api.patients.search');
+        Route::put('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])
+            ->name('appointments.update_status');
+
+        Route::get('/api/patients/search', [PatientController::class, 'search'])
+            ->name('api.patients.search');
+
+        Route::put('/appointments/{appointment}/finish', [AppointmentController::class, 'finish'])
+            ->name('appointments.finish');
     });
 
     // -------------------------------------------------------

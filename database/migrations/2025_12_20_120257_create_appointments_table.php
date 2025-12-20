@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->enum('type', ['consultation', 'control', 'urgency'])->default('consultation');
 
             // Status Workflow
-            $table->enum('status', ['scheduled', 'waiting', 'in_consultation', 'finished', 'cancelled', 'no_show'])
+            $table->enum('status', ['scheduled', 'waiting', 'preparing', 'in_consultation', 'finished', 'cancelled', 'no_show'])
                 ->default('scheduled');
 
             // Timing
@@ -51,7 +51,7 @@ return new class extends Migration {
             $table->decimal('price', 10, 2);
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            
+
         });
     }
 

@@ -14,7 +14,7 @@ class PatientController extends Controller
     public function index(Request $request)
     {
         $query = Patient::where('clinic_id', Auth::user()->clinic_id)
-            ->with(['lastAppointment', 'nextControl']) 
+            ->with(['lastAppointment', 'nextControl'])
             ->withCount('appointments');
 
         // Filter Logic
@@ -32,6 +32,29 @@ class PatientController extends Controller
         $patients = $query->latest()->paginate(15);
 
         return view('secretary.patients', compact('patients'));
+    }
+
+
+    public function search(Request $request)
+    {
+        $search = $request->query('q');
+
+        // Return empty list if search is too short to avoid massive queries
+        if (strlen($search) < 2) {
+            return response()->json([]);
+        }
+
+        $patients = Patient::where('clinic_id', Auth::user()->clinic_id)
+            ->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%$search%")
+                    ->orWhere('last_name', 'like', "%$search%")
+                    ->orWhere('cin', 'like', "%$search%")
+                    ->orWhere('phone', 'like', "%$search%");
+            })
+            ->limit(10)
+            ->get(['id', 'first_name', 'last_name', 'phone']);
+
+        return response()->json($patients);
     }
 
     /**

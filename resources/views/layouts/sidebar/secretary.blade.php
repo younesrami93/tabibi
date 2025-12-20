@@ -5,18 +5,18 @@
 </li>
 
 <li class="nav-item">
-    <a href="#" class="nav-link">
-        <i class="fa-solid fa-calendar-plus"></i> Book Appointment
+    <a href="{{ route('appointments.index') }}" 
+       class="nav-link {{ request()->routeIs('appointments.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-calendar-plus"></i> Appointments
     </a>
 </li>
 
 <li class="nav-item">
-    <a href="{{ route('patients.index') }}" class="nav-link">
-        <i class="fa-solid fa-users"></i> Patient Search
+    <a href="{{ route('patients.index') }}" 
+       class="nav-link {{ request()->routeIs('patients.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-users"></i> Patients
     </a>
 </li>
-
-
 
 <li class="nav-item">
     <a href="#" class="nav-link">
