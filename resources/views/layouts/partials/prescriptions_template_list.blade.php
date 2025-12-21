@@ -1,4 +1,4 @@
-<div class="card-body p-0">
+<div class="card-body p-0 ">
     @if($templates->isEmpty())
         <div class="text-center py-5">
             <i class="fa-solid fa-clipboard-list fa-3x text-muted opacity-25 mb-3"></i>

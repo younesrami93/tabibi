@@ -13,7 +13,7 @@ class ClinicController extends Controller
 {
     public function index()
     {
-        $clinics = Clinic::with('users')->latest()->paginate(2);
+        $clinics = Clinic::with('users')->latest()->paginate(20);
         return view('admin.clinics', compact('clinics'));
     }
 

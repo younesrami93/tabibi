@@ -1,51 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Tabibi Admin')</title>
 
-    <!-- 1. Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- 2. Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- 3. FontAwesome -->
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-
-    <!-- 4. Custom CSS (Your new file) -->
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
-    <!-- SIDEBAR -->
-    <nav class="sidebar" id="sidebar">
-        <a href="#" class="sidebar-logo">
-            <div class="bg-primary text-white rounded p-1 d-flex align-items-center justify-content-center"
-                style="width: 32px; height: 32px;">
-                <i class="fa-solid fa-heart-pulse" style="font-size: 16px;"></i>
+    <aside class="sidebar" id="sidebar">
+        <div class="d-flex align-items-center px-4 py-4 border-bottom border-light" style="height: 80px;">
+            <div class="d-flex align-items-center gap-3 text-primary">
+                <div class="icon-box bg-primary text-white shadow-glow">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                <span class="fs-4 fw-bold text-dark tracking-tight">Tabibi</span>
             </div>
-            Tabibi.ma
-        </a>
+        </div>
 
-        <ul class="sidebar-menu p-0">
-            <!-- COMMON LINKS -->
+        <ul class="sidebar-menu list-unstyled">
             <li>
-                <a href="{{ route('dashboard') }}"
-                    class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-gauge"></i> Dashboard
+                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <i class="fa-solid fa-layer-group"></i>
+                    Dashboard
                 </a>
             </li>
 
-            <!-- ROLE BASED LINKS -->
             @if(Auth::user()->role === 'super_admin')
                 @include('layouts.sidebar.super_admin')
             @elseif(Auth::user()->role === 'doctor')
@@ -55,122 +47,99 @@
             @endif
         </ul>
 
-        <!-- PROFILE DROPDOWN -->
-        <div class="dropdown">
-            <a href="#" class="sidebar-profile dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="https://ui-avatars.com/api/?name={{ Auth::user()->name ?? 'Admin' }}&background=006aff&color=fff"
-                    alt="User">
-                <div class="small lh-1 text-dark">
-                    <div class="fw-bold">{{ Auth::user()->name ?? 'User' }}</div>
-                    <span class="text-muted" style="font-size: 11px;">{{ ucfirst(Auth::user()->role) }}</span>
+        <div class="p-3 border-top border-light mt-auto">
+            <div class="d-flex align-items-center gap-3 px-2">
+                <img src="https://ui-avatars.com/api/?name={{ Auth::user()->name }}&background=eff6ff&color=2563eb" 
+                     alt="User" class="rounded-circle border" width="40" height="40">
+                <div class="flex-grow-1 overflow-hidden">
+                    <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size: 0.875rem;">{{ Auth::user()->name }}</p>
+                    <p class="mb-0 text-muted text-truncate" style="font-size: 0.75rem;">{{ ucfirst(Auth::user()->role) }}</p>
                 </div>
-            </a>
-            <ul class="dropdown-menu shadow border-0" style="width: 220px; margin-left: 10px;">
-                <li><a class="dropdown-item py-2" href="#"><i class="fa-solid fa-user-gear me-2 text-muted"></i>
-                        Profile</a></li>
-                <li><a class="dropdown-item py-2" href="#"><i class="fa-solid fa-sliders me-2 text-muted"></i>
-                        Settings</a></li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li>
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button class="dropdown-item py-2 text-danger" type="submit">
-                            <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Sign out
-                        </button>
-                    </form>
-                </li>
-            </ul>
+                
+                <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-link text-muted p-0" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </form>
+            </div>
         </div>
-    </nav>
+    </aside>
 
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
-        <!-- Header -->
-        <header class="top-navbar">
+    <div class="main-wrapper">
+        
+        <header class="d-flex align-items-center justify-content-between px-4 py-3 bg-white bg-opacity-75 border-bottom border-light sticky-top" style="height: 80px; backdrop-filter: blur(10px);">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-white d-md-none border shadow-sm" id="sidebarToggle">
+                <button class="btn btn-light d-md-none text-muted" id="menuBtn">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <h5 class="m-0 fw-bold text-dark">@yield('header', 'Dashboard')</h5>
+                <h1 class="h5 fw-bold text-dark mb-0 d-none d-sm-block">@yield('header', 'Dashboard')</h1>
             </div>
 
-            <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-white position-relative text-secondary border-0">
-                    <i class="fa-regular fa-bell fa-lg"></i>
-                    <span
-                        class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
-                        style="width: 10px; height: 10px;"></span>
+            <div class="d-flex align-items-center gap-4">
+                <div class="search-wrapper d-none d-md-flex">
+                    <i class="fa-solid fa-magnifying-glass text-muted small"></i>
+                    <input type="text" class="search-input" placeholder="Search...">
+                </div>
+
+                <button class="btn p-2 position-relative text-muted">
+                    <i class="fa-regular fa-bell fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" 
+                          style="width: 10px; height: 10px; top: 10px !important; left: 75% !important;"></span>
                 </button>
             </div>
         </header>
 
-        <!-- Page Content -->
-        <main class="page-content">
-
-
-            <!-- 
-                TOAST CONTAINER 
-                Positioned at Top End (Right) by default for better visibility 
-                Change 'top-0 end-0' to 'top-0 start-0' if you really want Top Left
-            -->
-
-            <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055;">
-
-                {{-- SUCCESS TOAST --}}
-                @if(session('success'))
-                    <div class="toast align-items-center text-bg-success border-0 fade show" role="alert"
-                        aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-                        <div class="d-flex">
-                            <div class="toast-body d-flex align-items-center gap-2">
-                                <i class="fa-solid fa-circle-check fa-lg"></i>
-                                <div>{{ session('success') }}</div>
+        <main class="flex-grow-1 overflow-auto p-4 p-lg-5">
+            <div class="container-fluid p-0">
+                
+                <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055;">
+                    @if(session('success'))
+                        <div class="toast align-items-center text-bg-success border-0 fade show" role="alert">
+                            <div class="d-flex">
+                                <div class="toast-body d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <div>{{ session('success') }}</div>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                             </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                                aria-label="Close"></button>
                         </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
 
-                {{-- ERROR TOAST --}}
-                @if(session('error'))
-                    <div class="toast align-items-center text-bg-danger border-0 fade show" role="alert"
-                        aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
-                        <div class="d-flex">
-                            <div class="toast-body d-flex align-items-center gap-2">
-                                <i class="fa-solid fa-circle-exclamation fa-lg"></i>
-                                <div>{{ session('error') }}</div>
-                            </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                                aria-label="Close"></button>
-                        </div>
-                    </div>
-                @endif
-
+                @yield('content')
+                
             </div>
-
-            @yield('content')
         </main>
     </div>
 
-    <!-- SCRIPTS -->
+    <div class="mobile-overlay position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-50" id="overlay" style="z-index: 999; display: none;"></div>
+
     <script>
-        // Mobile Sidebar Toggle
-        document.getElementById('sidebarToggle').addEventListener('click', function () {
-            document.getElementById('sidebar').classList.toggle('active');
-        });
+        // Sidebar Toggle Logic
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
 
+        function toggleSidebar() {
+            sidebar.classList.toggle('show');
+            if (window.innerWidth <= 768) {
+                overlay.style.display = sidebar.classList.contains('show') ? 'block' : 'none';
+            }
+        }
 
+        if(menuBtn) {
+            menuBtn.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+        }
+
+        // Initialize Toasts
         document.addEventListener("DOMContentLoaded", function () {
             var toastElList = [].slice.call(document.querySelectorAll('.toast'));
             var toastList = toastElList.map(function (toastEl) {
-                // Initialize Bootstrap Toast with 5s delay (configured in data-bs-delay)
                 return new bootstrap.Toast(toastEl).show();
             });
         });
-
     </script>
 </body>
-
 </html>

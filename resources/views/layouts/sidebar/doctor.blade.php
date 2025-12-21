@@ -33,7 +33,7 @@
 <li class="nav-item">
     <a href="{{ route('prescriptions_templates.index') }}"
         class="nav-link {{ request()->routeIs('prescriptions_templates.*') ? 'active' : '' }}">
-        <i class="fa-solid fa-clipboard-list"></i> Prescription Templates
+        <i class="fa-solid fa-clipboard-list"></i> Prescriptions
     </a>
 </li>
 

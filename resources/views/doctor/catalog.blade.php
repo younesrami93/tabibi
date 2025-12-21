@@ -1,105 +1,126 @@
 @extends('layouts.admin')
 
-
-
 @section('title', 'Medical Catalog')
-@section('header', 'Manage Medical Catalog')
-
+@section('header', 'Medical Catalog')
 
 @section('content')
 
     {{-- HEADER --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="mb-1"><i class="fa-solid fa-book-medical text-primary me-2"></i> Medical Catalog</h4>
-            <p class="text-muted small mb-0">Manage your frequent medicines and test presets.</p>
+
+            <h4 class="mb-0 text-secondary">Medical Catalog</h4>
+            <p class="text-muted small mb-0">Manage your frequent medicines and tests presets.</p>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
 
-            {{-- NEW: SCOPE FILTER --}}
-            <select id="catalogScope" class="form-select shadow-sm" style="width: 150px;" onchange="performSearch()">
+            {{-- TOGGLE BUTTONS (Replaces Old Tabs) --}}
+            <div class="p-1 rounded-pill d-inline-flex border shadow-sm bg-white">
+
+                {{-- Medicine Button --}}
+                <button onclick="switchTab('medicine', this)" id="tab-medicine"
+                    class="btn btn-sm px-4 py-2 rounded-pill fw-bold transition-all {{ $type == 'medicine' ? 'btn-primary text-white shadow-sm' : 'text-muted bg-transparent' }}">
+                    <i class="fa-solid fa-pills me-2"></i>Medicines
+                </button>
+
+                {{-- Lab Test Button --}}
+                <button onclick="switchTab('test', this)" id="tab-test"
+                    class="btn btn-sm px-4 py-2 rounded-pill fw-bold transition-all {{ $type == 'test' ? 'btn-primary text-white shadow-sm' : 'text-muted bg-transparent' }}">
+                    <i class="fa-solid fa-microscope me-2"></i>Lab Tests
+                </button>
+
+            </div>
+
+            {{-- SCOPE FILTER --}}
+            <select id="catalogScope" class="form-select form-select-sm shadow-sm border-0 bg-white" style="width: 140px;"
+                onchange="performSearch()">
                 <option value="all" {{ request('scope') == 'all' ? 'selected' : '' }}>Show All</option>
                 <option value="mine" {{ request('scope') == 'mine' ? 'selected' : '' }}>My Items Only</option>
                 <option value="system" {{ request('scope') == 'system' ? 'selected' : '' }}>System Only</option>
             </select>
 
-            {{-- SEARCH BAR --}}
-            <div class="input-group shadow-sm" style="width: 250px;">
-                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
-                <input type="text" id="catalogSearch" class="form-control border-start-0 ps-0" placeholder="Search..."
-                    onkeyup="performSearch()" value="{{ request('q') }}">
-            </div>
-
             {{-- ADD BUTTON --}}
-            <button class="btn btn-primary fw-bold shadow-sm text-nowrap" data-bs-toggle="modal"
+            <button class="btn btn-primary btn-sm fw-bold shadow-sm text-nowrap" data-bs-toggle="modal"
                 data-bs-target="#addItemModal">
-                <i class="fa-solid fa-plus me-2"></i> New Item
+                <i class="fa-solid fa-plus me-2"></i>New Item
             </button>
         </div>
     </div>
 
-    {{-- TABS --}}
-    <ul class="nav nav-tabs mb-4">
-        <li class="nav-item">
-            <a class="nav-link {{ $type == 'medicine' ? 'active fw-bold' : '' }}" href="javascript:void(0)"
-                onclick="switchTab('medicine')">
-                <i class="fa-solid fa-pills me-2"></i> Medicines
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ $type == 'test' ? 'active fw-bold' : '' }}" href="javascript:void(0)"
-                onclick="switchTab('test')">
-                <i class="fa-solid fa-microscope me-2"></i> Lab Tests
-            </a>
-        </li>
-    </ul>
+    {{-- SEARCH BAR (Full Width Row) --}}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-2">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-0 ps-3"><i
+                        class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" id="catalogSearch" class="form-control border-0 bg-white"
+                    placeholder="Search medicines or tests..." onkeyup="performSearch()" value="{{ request('q') }}">
+            </div>
+        </div>
+    </div>
 
     {{-- DYNAMIC LIST CONTAINER --}}
-    <div class="card border-0 shadow-sm" id="catalogContainer">
+    <div class="card border-0 shadow-sm overflow-hidden" id="catalogContainer" style="min-height: 300px;">
         @include('layouts.partials.catalog_list')
     </div>
 
     {{-- MODAL INCLUDE --}}
     @include('layouts.partials.catalog_add_modal')
-    {{-- UPDATED JAVASCRIPT --}}
+
+    {{-- SCRIPTS --}}
     <script>
         let searchTimeout;
-        // Store current type in a JS variable so we don't lose it when filtering
         let currentType = "{{ $type }}";
 
         function performSearch() {
             let query = document.getElementById('catalogSearch').value;
-            let scope = document.getElementById('catalogScope').value; // Get Filter Value
+            let scope = document.getElementById('catalogScope').value;
 
             clearTimeout(searchTimeout);
 
             searchTimeout = setTimeout(() => {
-                document.getElementById('catalogContainer').style.opacity = '0.5';
+                let container = document.getElementById('catalogContainer');
+                container.style.opacity = '0.5';
 
-                // Send Type + Query + Scope
                 fetch(`{{ route('catalog.index') }}?type=${currentType}&q=${query}&scope=${scope}`, {
                     headers: { "X-Requested-With": "XMLHttpRequest" }
                 })
                     .then(response => response.text())
                     .then(html => {
-                        document.getElementById('catalogContainer').innerHTML = html;
-                        document.getElementById('catalogContainer').style.opacity = '1';
+                        container.innerHTML = html;
+                        container.style.opacity = '1';
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(error => {
+                        console.error('Error:', error);
+                        container.style.opacity = '1';
+                    });
             }, 300);
         }
 
-        // Helper to switch tabs without reloading page (optional, but smoother)
-        function switchTab(newType) {
+        function switchTab(newType, btnElement) {
             currentType = newType;
 
-            // Update visual active state
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active', 'fw-bold'));
-            event.currentTarget.classList.add('active', 'fw-bold');
+            // 1. Reset ALL buttons to "Inactive" State
+            // We select all buttons inside the toggle container (you can add a specific class to the container if needed)
+            const allButtons = btnElement.parentElement.querySelectorAll('button');
+            allButtons.forEach(btn => {
+                btn.className = 'btn btn-sm px-4 py-2 rounded-pill fw-bold transition-all text-muted bg-transparent';
+            });
 
-            performSearch(); // Refresh list with new type
+            // 2. Set CLICKED button to "Active" State (Blue & White)
+            btnElement.className = 'btn btn-sm px-4 py-2 rounded-pill fw-bold transition-all btn-primary text-white shadow-sm';
+
+            // 3. Trigger Search
+            performSearch();
         }
     </script>
+
+    {{-- OPTIONAL: Add transition style locally if not in custom.css --}}
+    <style>
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
 
 @endsection
