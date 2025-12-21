@@ -89,6 +89,28 @@ class PatientController extends Controller
         return back()->with('success', 'Patient file created successfully.');
     }
 
+
+    public function show(Patient $patient)
+    {
+        // Security Check: Ensure patient belongs to this clinic
+        if ($patient->clinic_id !== Auth::user()->clinic_id) {
+            abort(403);
+        }
+
+        // Load relationships for the History Tab
+        $patient->load([
+            'appointments' => function ($q) {
+                $q->orderBy('scheduled_at', 'desc');
+            },
+            /*'prescriptions' => function ($q) {
+                $q->orderBy('created_at', 'desc');
+            }*/
+        ]);
+
+        return view('secretary.patient_show', compact('patient'));
+    }
+
+
     /**
      * Update an existing Patient.
      */

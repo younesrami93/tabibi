@@ -68,6 +68,8 @@ Route::middleware('auth')->group(function () {
 
         Route::put('/appointments/{appointment}/finish', [AppointmentController::class, 'finish'])
             ->name('appointments.finish');
+
+
     });
 
     // -------------------------------------------------------

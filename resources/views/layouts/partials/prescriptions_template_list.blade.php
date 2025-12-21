@@ -30,10 +30,16 @@
                                 @endif
                             </td>
                             <td class="text-muted small">
-                                {{ count($t->items) }} items
-                                @if(isset($t->items[0]['name']))
-                                    (Starts with: {{ $t->items[0]['name'] }})
-                                @endif
+                                {{-- Pluck all names and join them with commas --}}
+                                @php
+                                    $names = collect($t->items)->pluck('name')->implode(', ');
+                                @endphp
+
+                                {{-- Bootstrap class to cut text with (...) if too long --}}
+                                <div class="text-truncate" style="max-width: 350px;" title="{{ $names }}">
+                                    {{ $names }}
+                                </div>
+
                             </td>
                             <td class="text-end pe-4">
                                 {{-- EDIT BUTTON --}}

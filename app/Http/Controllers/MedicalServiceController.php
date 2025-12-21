@@ -11,11 +11,19 @@ class MedicalServiceController extends Controller
     /**
      * List all services for this clinic.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $services = MedicalService::where('clinic_id', Auth::user()->clinic_id)
-            ->latest()
-            ->get(); // Using get() because a doctor rarely has > 50 services
+        $query = MedicalService::where('clinic_id', Auth::user()->clinic_id);
+
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        $services = $query->orderBy('name')->paginate(15);
 
         return view('doctor.services', compact('services'));
     }
@@ -74,14 +82,14 @@ class MedicalServiceController extends Controller
     /**
      * Soft delete a service.
      */
-    public function destroy($id)
+    public function destroy(MedicalService $service)
     {
-        $service = MedicalService::where('id', $id)
-            ->where('clinic_id', Auth::user()->clinic_id)
-            ->firstOrFail();
+        if ($service->clinic_id !== Auth::user()->clinic_id) {
+            abort(403);
+        }
 
         $service->delete();
 
-        return back()->with('success', 'Service removed from list.');
+        return back()->with('success', 'Service deleted.');
     }
 }

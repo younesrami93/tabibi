@@ -56,7 +56,10 @@ class Patient extends Model
     }
 
 
-    // ...
+    /*public function prescriptions(): HasMany
+    {
+        return $this->hasMany(Prescription::class);
+    }*/
 
     // ...
     public function nextControl(): HasOne

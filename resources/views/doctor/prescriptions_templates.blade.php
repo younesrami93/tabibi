@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Prescription Templates')
+@section('header', 'Manage Prescription')
 
 @section('content')
 
@@ -244,16 +245,16 @@
                 : '<i class="fa-solid fa-keyboard text-muted me-2"></i>';
 
             tr.innerHTML = `
-                                                                <td class="ps-3"><div class="fw-bold">${iconHtml} ${newItem.name}</div></td>
-                                                                <td>
-                                                                    <input type="text" class="form-control form-control-sm" 
-                                                                           value="${newItem.note}" 
-                                                                           onchange="updateItemNote(${newItem.tempId}, this.value)">
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    <button class="btn btn-sm text-danger" onclick="removeItem(${newItem.tempId})"><i class="fa-solid fa-trash"></i></button>
-                                                                </td>
-                                                            `;
+                                                                    <td class="ps-3"><div class="fw-bold">${iconHtml} ${newItem.name}</div></td>
+                                                                    <td>
+                                                                        <input type="text" class="form-control form-control-sm" 
+                                                                               value="${newItem.note}" 
+                                                                               onchange="updateItemNote(${newItem.tempId}, this.value)">
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <button class="btn btn-sm text-danger" onclick="removeItem(${newItem.tempId})"><i class="fa-solid fa-trash"></i></button>
+                                                                    </td>
+                                                                `;
             tbody.appendChild(tr);
             updateCount();
         }

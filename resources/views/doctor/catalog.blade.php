@@ -1,6 +1,10 @@
 @extends('layouts.admin')
 
+
+
 @section('title', 'Medical Catalog')
+@section('header', 'Manage Medical Catalog')
+
 
 @section('content')
 

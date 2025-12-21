@@ -149,7 +149,8 @@
                                             data-bs-target="#editPatientModal{{ $patient->id }}" title="Edit">
                                             <i class="fa-solid fa-pen"></i>
                                         </button>
-                                        <a href="#" class="btn btn-sm btn-light border text-primary" title="History">
+                                        <a href="{{ route('patients.show', $patient->id) }}"
+                                            class="btn btn-sm btn-light border text-primary" title="History">
                                             <i class="fa-solid fa-file-medical"></i>
                                         </a>
                                     </div>
