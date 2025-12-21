@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CatalogItemController;
 use App\Http\Controllers\ClinicController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\MedicalServiceController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\PrescriptionTemplateController;
 use App\Http\Controllers\SecretaryController;
 use App\Models\Patient;
 use Illuminate\Support\Facades\Route;
@@ -74,6 +76,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:doctor')->group(function () {
         Route::resource('services', MedicalServiceController::class)->except(['create', 'show', 'edit']);
         Route::resource('secretaries', SecretaryController::class)->except(['create', 'show', 'edit']);
+
+        Route::resource('catalog', CatalogItemController::class)->only(['index', 'store', 'destroy']);
+        Route::get('/api/catalog/search', [CatalogItemController::class, 'search'])->name('api.catalog.search');
+
+        Route::resource('prescriptions_templates', PrescriptionTemplateController::class)
+            ->parameters(['prescriptions_templates' => 'template']);
+
     });
 
 });

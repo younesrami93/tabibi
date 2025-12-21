@@ -168,8 +168,8 @@
                                                     <input type="time" name="config[calendar_end_time]" class="form-control" value="{{ $clinic->config('calendar_end_time') }}">
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label class="form-label">Slot Duration (min)</label>
-                                                    <input type="number" name="config[slot_duration]" class="form-control" value="{{ $clinic->config('slot_duration') }}">
+                                                    <label class="form-label">Default Appointment price</label>
+                                                    <input type="number" name="config[default_price]" class="form-control" value="{{ $clinic->config('default_price') }}">
                                                 </div>
                                             </div>
                                         </div>

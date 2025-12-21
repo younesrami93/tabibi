@@ -24,6 +24,20 @@
     </a>
 </li>
 
+<li class="nav-item">
+    <a href="{{ route('catalog.index') }}" class="nav-link {{ request()->routeIs('catalog.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-book-medical"></i> Medical Catalog
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('prescriptions_templates.index') }}"
+        class="nav-link {{ request()->routeIs('prescriptions_templates.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-clipboard-list"></i> Prescription Templates
+    </a>
+</li>
+
+
 <li class="px-3 mt-4 mb-2 text-uppercase text-white small">Finance</li>
 
 <li class="nav-item">

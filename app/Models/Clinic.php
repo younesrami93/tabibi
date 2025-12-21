@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Clinic extends Model
 {
-    use HasFactory, SoftDeletes,Blameable;
+    use HasFactory, SoftDeletes, Blameable;
     /**
      * The attributes that aren't mass assignable.
      * Setting this to an empty array allows us to fill any field (name, price, etc.) safely.
@@ -42,6 +42,7 @@ class Clinic extends Model
         'calendar_end_time' => '18:00',
         'slot_duration' => 30, // minutes
         'language' => 'fr',
+        'default_price' => '300.00',
         "queue_mode" => "fifo"
     ];
 
@@ -66,50 +67,27 @@ class Clinic extends Model
         return $this->hasMany(User::class);
     }
 
-    /**
-     * Get the patients belonging to this clinic.
-     */
-    /*public function patients(): HasMany
+    public function patients(): HasMany
     {
         return $this->hasMany(Patient::class);
-    }*/
+    }
 
-    /**
-     * Get the appointments belonging to this clinic.
-     */
-    /*public function appointments(): HasMany
+    public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
-    }*/
+    }
 
-    /* -----------------------------------------------------------------
-     |  Accessors & Helpers (Business Logic)
-     | -----------------------------------------------------------------
-     */
 
-    /**
-     * Calculate the remaining balance (Credit).
-     * Usage in Blade: {{ $clinic->balance_due }}
-     */
     public function getBalanceDueAttribute(): float
     {
-        // Example: Price 2000 - Paid 1500 = 500 (Rest)
         return $this->subscription_price - $this->total_paid;
     }
 
-    /**
-     * Check if the clinic has fully paid their subscription.
-     * Usage: if($clinic->is_fully_paid)
-     */
     public function getIsFullyPaidAttribute(): bool
     {
-        // We use a tiny number (0.01) to avoid floating point errors
         return $this->balance_due < 0.01;
     }
 
-    /**
-     * Check if the subscription is currently active (Not Expired + Active Flag).
-     */
     public function hasActiveSubscription(): bool
     {
         // 1. Must be marked active in DB

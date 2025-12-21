@@ -17,7 +17,7 @@ class AppointmentController extends Controller
 
 
         $query = Appointment::where('clinic_id', $clinic->id)
-            ->with(['patient', 'doctor', 'services','history.user']);
+            ->with(['patient', 'doctor', 'services', 'history.user']);
         $appointments = $query->get();
 
         // 1. Base Query
@@ -87,47 +87,48 @@ class AppointmentController extends Controller
     }
 
 
+
     public function finish(Request $request, Appointment $appointment)
     {
         $request->validate([
+            'price' => 'required|numeric|min:0', // Base Consultation Price
             'services' => 'array',
-            'services.*.id' => 'required|exists:medical_services,id',
-            'services.*.price' => 'required|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($request, $appointment) {
-            $totalPrice = 0;
-            $syncData = [];
 
-            // 1. Prepare Services Data for Sync
+
+        DB::transaction(function () use ($request, $appointment) {
+            $syncData = [];
+            $servicesTotal = 0;
+
+            // 1. Calculate Services Total
             if ($request->has('services')) {
                 foreach ($request->services as $serviceData) {
-                    $price = $serviceData['price'];
-                    $totalPrice += $price;
-
-                    // Prepare pivot data: [service_id => ['price' => 100], ...]
-                    $syncData[$serviceData['id']] = ['price' => $price];
+                    $sPrice = $serviceData['price'];
+                    $servicesTotal += $sPrice;
+                    $syncData[$serviceData['id']] = ['price' => $sPrice];
                 }
             }
 
-            // 2. Sync Services (This replaces old services with the new list)
-            $appointment->services()->sync($syncData);
+            // 2. Grand Total = Base Price + Services Total
+            $basePrice = $request->price;
+            $grandTotal = $basePrice + $servicesTotal;
 
-            // 3. Update Appointment Details
+            // 3. Save Everything
+            $appointment->services()->sync($syncData);
             $appointment->update([
                 'status' => 'finished',
                 'finished_at' => now(),
-                'notes' => $request->notes, // Save final medical/admin notes
-                'total_price' => $totalPrice,
-                // Simple logic: if paid amount >= total, it's paid.
-                'is_paid' => ($request->paid_amount >= $totalPrice),
+                'price' => $basePrice,         // Save the adjusted base price
+                'total_price' => $grandTotal,  // Save the final sum
+                'notes' => $request->notes,
+                'is_paid' => ($request->paid_amount >= $grandTotal),
             ]);
         });
 
-        return back()->with('success', 'Appointment completed and invoice generated.');
+        return back()->with('success', 'Appointment Completed.  ');
     }
-
 
     public function store(Request $request)
     {
@@ -184,16 +185,23 @@ class AppointmentController extends Controller
                     }
                 }
 
+
+                $clinic = Auth::user()->clinic;
+
+                $defaultPrice = $clinic->config('default_price') ?? 0;
+
+
                 // 3. CREATE APPOINTMENT
                 $appointment = Appointment::create([
                     'clinic_id' => Auth::user()->clinic_id,
-                    'doctor_id' => Auth::user()->id, // Or assign to specific doctor
+                    'doctor_id' => Auth::user()->id,
                     'patient_id' => $patientId,
                     'parent_appointment_id' => $parentId,
                     'type' => $request->type,
                     'status' => 'scheduled',
                     'scheduled_at' => $request->scheduled_at,
                     'total_price' => $totalPrice,
+                    'price' => $defaultPrice,
                     'notes' => $request->notes,
                 ]);
 
