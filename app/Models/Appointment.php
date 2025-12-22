@@ -20,6 +20,7 @@ class Appointment extends Model
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
         'total_price' => 'decimal:2',
+        'prescription' => 'array'
     ];
 
     // Relationships

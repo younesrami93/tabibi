@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\Patient;
 use App\Models\MedicalService;
+use App\Models\PrescriptionTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ class AppointmentController extends Controller
     {
         $clinic = Auth::user()->clinic;
 
+        $templates = PrescriptionTemplate::where('clinic_id', $clinic->id)->get();
 
         $query = Appointment::where('clinic_id', $clinic->id)
             ->with(['patient', 'doctor', 'services', 'history.user']);
@@ -83,53 +85,8 @@ class AppointmentController extends Controller
 
         $allServices = MedicalService::where('clinic_id', $clinic->id)->get();
 
-        return view('secretary.appointments', compact('appointments', 'missedCount', 'allServices'));
+        return view('secretary.appointments', compact('appointments', 'missedCount', 'allServices', 'templates'));
     }
-
-
-
-    public function finish(Request $request, Appointment $appointment)
-    {
-        $request->validate([
-            'price' => 'required|numeric|min:0', // Base Consultation Price
-            'services' => 'array',
-            'paid_amount' => 'nullable|numeric|min:0',
-        ]);
-
-
-
-        DB::transaction(function () use ($request, $appointment) {
-            $syncData = [];
-            $servicesTotal = 0;
-
-            // 1. Calculate Services Total
-            if ($request->has('services')) {
-                foreach ($request->services as $serviceData) {
-                    $sPrice = $serviceData['price'];
-                    $servicesTotal += $sPrice;
-                    $syncData[$serviceData['id']] = ['price' => $sPrice];
-                }
-            }
-
-            // 2. Grand Total = Base Price + Services Total
-            $basePrice = $request->price;
-            $grandTotal = $basePrice + $servicesTotal;
-
-            // 3. Save Everything
-            $appointment->services()->sync($syncData);
-            $appointment->update([
-                'status' => 'finished',
-                'finished_at' => now(),
-                'price' => $basePrice,         // Save the adjusted base price
-                'total_price' => $grandTotal,  // Save the final sum
-                'notes' => $request->notes,
-                'is_paid' => ($request->paid_amount >= $grandTotal),
-            ]);
-        });
-
-        return back()->with('success', 'Appointment Completed.  ');
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -216,6 +173,124 @@ class AppointmentController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Error: ' . $e->getMessage())->withInput();
         }
+    }
+
+
+
+
+    public function finish(Request $request, $id)
+    {
+        $appointment = Appointment::findOrFail($id);
+
+        $request->validate([
+            'price' => 'required|numeric|min:0', // Base Consultation Fee
+            'services' => 'array',
+            'prescriptions' => 'array',          // <--- FIXED: Plural (matches JS)
+            'paid_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::transaction(function () use ($request, $appointment) {
+
+            // ====================================================
+            // 1. PROCESS SERVICES (Standard & Custom)
+            // ====================================================
+            $syncData = [];
+            $servicesTotal = 0;
+            $customServicesList = []; // To store names of custom items
+
+            if ($request->has('services')) {
+                foreach ($request->services as $serviceData) {
+                    $sPrice = $serviceData['price'] ?? 0;
+                    $servicesTotal += $sPrice;
+
+                    // Case A: Standard Catalog Service (Has ID)
+                    if (isset($serviceData['id'])) {
+                        $syncData[$serviceData['id']] = ['price' => $sPrice];
+                    }
+                    // Case B: Custom Service (No ID, just text)
+                    elseif (isset($serviceData['custom_name'])) {
+                        $customServicesList[] = $serviceData['custom_name'] . ' (' . $sPrice . ' DH)';
+                    }
+                }
+            }
+
+            // Sync Standard Services to Pivot Table
+            $appointment->services()->sync($syncData);
+
+            // ====================================================
+            // 2. PROCESS PRESCRIPTIONS (Nested JSON)
+            // ====================================================
+            $finalPrescriptionData = [];
+
+            // We look for 'prescriptions' (Plural) as sent by the new UI
+            if ($request->has('prescriptions')) {
+                foreach ($request->prescriptions as $block) {
+
+                    $blockItems = [];
+                    // Check if this block has items
+                    if (isset($block['items']) && is_array($block['items'])) {
+                        foreach ($block['items'] as $item) {
+                            if (!empty($item['name'])) {
+                                $blockItems[] = [
+                                    'catalog_item_id' => $item['catalog_item_id'] ?? null,
+                                    'name' => $item['name'],
+                                    'note' => $item['note'] ?? '',
+                                ];
+                            }
+                        }
+                    }
+
+                    // Only save the block if it has items
+                    if (!empty($blockItems)) {
+                        $finalPrescriptionData[] = [
+                            'title' => $block['title'] ?? 'Prescription',
+                            'items' => $blockItems
+                        ];
+                    }
+                }
+            }
+
+            // ====================================================
+            // 3. FINANCIALS & SAVING
+            // ====================================================
+            $basePrice = $request->price;
+            $grandTotal = $basePrice + $servicesTotal;
+            $paidAmount = $request->input('paid_amount', 0);
+            $remainingDue = $grandTotal - $paidAmount;
+
+            // Handle Credit
+            if ($remainingDue > 0) {
+                $patient = $appointment->patient;
+                $patient->current_balance += $remainingDue;
+                $patient->save();
+            }
+
+            // Append Custom Services to Notes (so we don't lose record of them)
+            $finalNotes = $request->notes;
+            if (!empty($customServicesList)) {
+                $finalNotes .= "\n\n[Custom Services]: " . implode(', ', $customServicesList);
+            }
+
+            // Update Appointment
+            $appointment->update([
+                'status' => 'finished',
+                'finished_at' => now(),
+                'price' => $basePrice,
+                'total_price' => $grandTotal,
+                'notes' => $finalNotes,
+                'prescription' => $finalPrescriptionData, // Save the Nested JSON
+                'is_paid' => ($remainingDue <= 0),
+            ]);
+
+            // Log History
+            \App\Models\AppointmentHistory::create([
+                'appointment_id' => $appointment->id,
+                'status' => 'finished',
+                'changed_by' => auth()->id(),
+            ]);
+        });
+
+        return back()->with('success', 'Appointment Completed Successfully.');
     }
 
     public function updateStatus(Request $request, Appointment $appointment)
