@@ -1,39 +1,88 @@
 <div class="modal fade" id="viewModal-{{ $appt->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-start">
 
-            {{-- 1. HEADER: Clean & Informative --}}
-            <div class="modal-header bg-white px-5 py-4 border-bottom">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
-                        <i class="fa-solid fa-calendar-check fs-4"></i>
+            {{-- 1. UPDATED HEADER: Patient & Appointment Context --}}
+            <div class="modal-header bg-white px-4 py-3 border-bottom position-relative">
+                <div class="row w-100 g-0 align-items-center">
+
+                    {{-- LEFT: Patient Details --}}
+                    <div class="col-md-7">
+                        <div class="d-flex align-items-center gap-3">
+                            {{-- Avatar (Initials) --}}
+                            <div class="avatar-circle bg-primary bg-opacity-10 text-primary fw-bold rounded-circle flex-shrink-0"
+                                style="width: 52px; height: 52px; font-size: 1.25rem;">
+                                {{ substr($appt->patient->first_name, 0, 1) }}{{ substr($appt->patient->last_name, 0, 1) }}
+                            </div>
+
+                            {{-- Info Block --}}
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <h5 class="modal-title fw-bold text-dark mb-0">{{ $appt->patient->full_name }}</h5>
+                                    <a href="{{ route('patients.show', $appt->patient->id) }}" target="_blank"
+                                        class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill x-small fw-bold"
+                                        style="height: 20px; line-height: 18px;">
+                                        View Profile <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
+                                    </a>
+                                </div>
+                                <div
+                                    class="d-flex flex-wrap gap-2 text-muted x-small fw-bold text-uppercase tracking-wide">
+                                    <span><i
+                                            class="fa-solid fa-venus-mars me-1"></i>{{ ucfirst($appt->patient->gender) }}</span>
+
+                                    {{-- Age: Only show if birth_date exists --}}
+                                    @if($appt->patient->birth_date)
+                                        <span class="opacity-25">•</span>
+                                        <span><i class="fa-solid fa-cake-candles me-1"></i>{{ $appt->patient->age }}</span>
+                                    @endif
+
+                                    <span class="opacity-25">•</span>
+                                    <span><i
+                                            class="fa-solid fa-phone me-1"></i>{{ $appt->patient->phone ?? 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h5 class="modal-title fw-bold text-dark mb-0">Appointment Details</h5>
-                        <p class="text-muted small mb-0 fw-medium">
-                            Ref: #{{ $appt->id }} <span class="mx-2">•</span>
-                            {{ $appt->scheduled_at->format('l, d M Y') }} at {{ $appt->scheduled_at->format('H:i') }}
-                        </p>
+
+                    {{-- RIGHT: Appointment Meta --}}
+                    {{-- Added pe-5 to prevent overlap with Close Button --}}
+                    <div class="col-md-5 ps-md-4 mt-3 mt-md-0 border-start-md pe-5">
+                        <div
+                            class="d-flex flex-column align-items-start align-items-md-end justify-content-center h-100">
+
+                            {{-- ID & Status Row --}}
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="text-muted small me-1">Appt #{{ $appt->id }}</span>
+                                @php
+                                    $statusStyles = [
+                                        'finished' => ['bg' => 'bg-success', 'text' => 'text-success', 'icon' => 'fa-check-circle'],
+                                        'scheduled' => ['bg' => 'bg-primary', 'text' => 'text-primary', 'icon' => 'fa-clock'],
+                                        'cancelled' => ['bg' => 'bg-danger', 'text' => 'text-danger', 'icon' => 'fa-times-circle'],
+                                        'waiting' => ['bg' => 'bg-warning', 'text' => 'text-warning', 'icon' => 'fa-chair'],
+                                        'in_consultation' => ['bg' => 'bg-info', 'text' => 'text-info', 'icon' => 'fa-user-doctor'],
+                                    ];
+                                    $style = $statusStyles[$appt->status] ?? $statusStyles['scheduled'];
+                                @endphp
+                                <div
+                                    class="px-2 py-1 rounded-pill {{ $style['bg'] }} bg-opacity-10 {{ $style['text'] }} fw-bold x-small text-uppercase d-flex align-items-center gap-1">
+                                    <i class="fa-solid {{ $style['icon'] }}"></i>
+                                    {{ str_replace('_', ' ', $appt->status) }}
+                                </div>
+                            </div>
+
+                            {{-- Date & Time --}}
+                            <div class="text-dark fw-bold">
+                                {{ $appt->scheduled_at->format('l, d M Y') }}
+                                <span class="text-muted fw-normal ms-1">at
+                                    {{ $appt->scheduled_at->format('H:i') }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-3">
-                    {{-- Status Pill --}}
-                    @php
-                        $statusStyles = [
-                            'finished' => ['bg' => 'bg-success', 'text' => 'text-success', 'icon' => 'fa-check-circle'],
-                            'scheduled' => ['bg' => 'bg-primary', 'text' => 'text-primary', 'icon' => 'fa-clock'],
-                            'cancelled' => ['bg' => 'bg-danger', 'text' => 'text-danger', 'icon' => 'fa-times-circle'],
-                            'waiting' => ['bg' => 'bg-warning', 'text' => 'text-warning', 'icon' => 'fa-chair'],
-                            'in_consultation' => ['bg' => 'bg-info', 'text' => 'text-info', 'icon' => 'fa-user-doctor'],
-                        ];
-                        $style = $statusStyles[$appt->status] ?? $statusStyles['scheduled'];
-                    @endphp
-                    <div
-                        class="px-3 py-2 rounded-pill {{ $style['bg'] }} bg-opacity-10 {{ $style['text'] }} fw-bold small text-uppercase d-flex align-items-center gap-2">
-                        <i class="fa-solid {{ $style['icon'] }}"></i> {{ str_replace('_', ' ', $appt->status) }}
-                    </div>
-                    <button type="button" class="btn-close ms-1" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+
+                {{-- Close Button (Absolute Top Right) --}}
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
 
             <div class="modal-body p-0 bg-light">
@@ -41,27 +90,6 @@
 
                     {{-- LEFT COLUMN: Medical Context (65%) --}}
                     <div class="col-lg-8 p-5 bg-white">
-
-                        {{-- A. Patient Profile --}}
-                        <div class="d-flex align-items-start gap-4 mb-5">
-                            <div class="pt-1">
-                                <h4 class="fw-bold text-dark mb-1">{{ $appt->patient->full_name }}</h4>
-                                <div class="d-flex flex-wrap gap-3 text-muted small fw-medium mb-2">
-                                    <span class="d-flex align-items-center gap-1"><i class="fa-solid fa-venus-mars"></i>
-                                        {{ ucfirst($appt->patient->gender) }}</span>
-                                    <span class="d-flex align-items-center gap-1"><i
-                                            class="fa-solid fa-cake-candles"></i> {{ $appt->patient->age }} Years</span>
-                                    <span class="d-flex align-items-center gap-1"><i class="fa-solid fa-phone"></i>
-                                        {{ $appt->patient->phone ?? 'N/A' }}</span>
-                                </div>
-                                <a href="{{ route('patients.show', $appt->patient->id) }}"
-                                    class="text-decoration-none small fw-bold text-primary">
-                                    View Full Patient Profile <i class="fa-solid fa-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </div>
-
-                        <hr class="border-light my-5">
 
                         {{-- B. Clinical Information --}}
                         <div class="d-flex flex-column gap-5">
@@ -84,7 +112,7 @@
                                 </div>
                             </div>
 
-                            {{-- Prescriptions (Nested Blocks) --}}
+                            {{-- Prescriptions --}}
                             @if(!empty($appt->prescription) && is_array($appt->prescription))
                                 <div>
                                     <h6
@@ -92,66 +120,37 @@
                                         <i class="fa-solid fa-prescription text-primary"></i> Prescriptions
                                     </h6>
 
-                                    <div class="d-flex flex-column gap-3">
+                                    <div class="row g-3">
                                         @foreach($appt->prescription as $index => $block)
                                             @if(!empty($block['items']))
-                                                <div class="border rounded-3 overflow-hidden">
-                                                    {{-- Prescription Header --}}
-                                                    <div
-                                                        class="bg-surface-secondary px-4 py-2 border-bottom d-flex justify-content-between align-items-center">
-                                                        <span
-                                                            class="fw-bold text-dark small">{{ $block['title'] ?? 'Prescription #' . ($index + 1) }}</span>
-                                                        <i class="fa-solid fa-file-medical text-muted opacity-25"></i>
-                                                    </div>
-                                                    {{-- Items List --}}
-                                                    <div class="px-4 py-2">
-                                                        <ul class="list-unstyled mb-0">
-                                                            @foreach($block['items'] as $item)
-                                                                <li class="py-2 border-bottom border-light last-no-border">
-                                                                    <div class="fw-bold text-dark mb-1">{{ $item['name'] }}</div>
-                                                                    <div class="small text-muted fst-italic">
-                                                                        <i
-                                                                            class="fa-solid fa-arrow-turn-up fa-rotate-90 me-2 opacity-25"></i>{{ $item['note'] ?? 'No instructions' }}
-                                                                    </div>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
+                                                <div class="col-md-6">
+                                                    <div class="border rounded-3 overflow-hidden h-100">
+                                                        {{-- Prescription Header --}}
+                                                        <div
+                                                            class="bg-surface-secondary px-4 py-2 border-bottom d-flex justify-content-between align-items-center">
+                                                            <span
+                                                                class="fw-bold text-dark small">{{ $block['title'] ?? 'Prescription #' . ($index + 1) }}</span>
+                                                            <i class="fa-solid fa-file-medical text-muted opacity-25"></i>
+                                                        </div>
+                                                        {{-- Items List --}}
+                                                        <div class="px-4 py-2">
+                                                            <ul class="list-unstyled mb-0">
+                                                                @foreach($block['items'] as $item)
+                                                                    <li class="py-2 border-bottom border-light last-no-border">
+                                                                        <div class="fw-bold text-dark mb-1">{{ $item['name'] }}</div>
+                                                                        <div class="small text-muted fst-italic">
+                                                                            {{-- Replaced arrow with clock icon --}}
+                                                                            <i
+                                                                                class="fa-regular fa-clock me-2 opacity-25"></i>{{ $item['note'] ?? 'No instructions' }}
+                                                                        </div>
+                                                                    </li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             @endif
                                         @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- Services Performed --}}
-                            @if($appt->services->isNotEmpty())
-                                <div>
-                                    <h6
-                                        class="text-uppercase text-muted small fw-bold mb-3 tracking-wide d-flex align-items-center gap-2">
-                                        <i class="fa-solid fa-notes-medical text-primary"></i> Services Performed
-                                    </h6>
-                                    <div class="border rounded-3 overflow-hidden">
-                                        <table class="table table-borderless mb-0">
-                                            <thead class="bg-light border-bottom">
-                                                <tr>
-                                                    <th class="ps-4 small text-muted font-weight-normal py-2">Service Name
-                                                    </th>
-                                                    <th class="pe-4 text-end small text-muted font-weight-normal py-2">Cost
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($appt->services as $s)
-                                                    <tr class="border-bottom border-light last-no-border">
-                                                        <td class="ps-4 py-3 fw-medium text-dark">{{ $s->name }}</td>
-                                                        <td class="pe-4 py-3 text-end text-muted">
-                                                            {{ number_format($s->pivot->price, 2) }} DH
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
                                     </div>
                                 </div>
                             @endif
@@ -170,17 +169,22 @@
                                     Invoice Summary
                                 </div>
                                 <div class="card-body p-4">
-                                    {{-- Line Items --}}
-                                    <div class="d-flex justify-content-between mb-2 small text-secondary">
+                                    {{-- 1. Consultation Fee --}}
+                                    <div class="d-flex justify-content-between mb-1 small text-secondary">
                                         <span>Consultation Fee</span>
                                         <span class="fw-medium text-dark">{{ number_format($appt->price, 2) }}</span>
                                     </div>
+
+                                    {{-- 2. Services List --}}
+                                    {{-- Removed "Services Performed" Header text --}}
                                     @if($appt->services->isNotEmpty())
-                                        <div class="d-flex justify-content-between mb-3 small text-secondary">
-                                            <span>Services Total</span>
-                                            <span
-                                                class="fw-medium text-dark">{{ number_format($appt->services->sum('pivot.price'), 2) }}</span>
-                                        </div>
+                                        @foreach($appt->services as $s)
+                                            <div class="d-flex justify-content-between mb-1 small text-secondary">
+                                                <span>{{ $s->name }}</span>
+                                                <span
+                                                    class="fw-medium text-dark">{{ number_format($s->pivot->price, 2) }}</span>
+                                            </div>
+                                        @endforeach
                                     @endif
 
                                     {{-- Grand Total --}}
@@ -233,7 +237,7 @@
                                 @endforeach
                             </div>
 
-                            {{-- Print Actions (Stick to bottom) --}}
+                            {{-- Print Actions --}}
                             <div class="mt-auto">
                                 <div class="d-grid gap-2">
                                     <button class="btn btn-outline-dark fw-bold shadow-sm" onclick="window.print()">
@@ -270,5 +274,16 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
+    }
+
+    .x-small {
+        font-size: 0.7rem;
+    }
+
+    /* Desktop border for header separation */
+    @media (min-width: 768px) {
+        .border-start-md {
+            border-left: 1px solid #dee2e6 !important;
+        }
     }
 </style>

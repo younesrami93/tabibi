@@ -85,6 +85,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('prescriptions_templates', PrescriptionTemplateController::class)
             ->parameters(['prescriptions_templates' => 'template']);
 
+        // route for document editor
+        Route::get('/document-editor', function () {
+            return view('layouts.document_editor');
+        })->name('document.editor');
+
     });
 
 });
