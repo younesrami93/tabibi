@@ -1,0 +1,354 @@
+        /* --- THEME COLORS & VARIABLES (Tabibi Style) --- */
+        :root {
+            /* Light Theme Palette */
+            --bg-base: #f1f5f9;
+            /* Light bluish-grey background (Dashboard bg) */
+            --bg-panel: #ffffff;
+            /* Pure white for cards/sidebars */
+            --border-color: #e2e8f0;
+            /* Subtle light border */
+
+            --text-main: #1e293b;
+            /* Dark Slate (High contrast text) */
+            --text-muted: #64748b;
+            /* Slate 500 (Secondary text) */
+
+            --primary-blue: #2563eb;
+            /* Tabibi Blue (approx) */
+            --primary-hover: #1d4ed8;
+
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 0.9rem;
+        }
+
+        /* --- JS COMPATIBILITY OVERRIDES --- */
+        /* These force the JS (which creates elements with 'text-light') to look dark in this theme */
+        .layer-item .text-light,
+        .layer-item .text-white,
+        #docSelector.text-light,
+        #docName.text-light {
+            color: var(--text-main) !important;
+        }
+
+        .bg-transparent.text-light {
+            color: var(--text-main) !important;
+        }
+
+        /* -------------------------------- */
+
+        /* Custom Scrollbar (Light) */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Utility Classes Re-mapped */
+        .bg-theme-base {
+            background-color: var(--bg-base) !important;
+        }
+
+        .bg-theme-panel {
+            background-color: var(--bg-panel) !important;
+        }
+
+        .border-theme {
+            border-color: var(--border-color) !important;
+        }
+
+        .text-theme-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .hover-bg-theme:hover {
+            background-color: #f8fafc !important;
+            color: var(--primary-blue) !important;
+            border-color: var(--primary-blue) !important;
+        }
+
+        /* Dimensions */
+        .w-64px {
+            width: 64px;
+        }
+
+        .w-320px {
+            width: 320px;
+        }
+
+        .h-48px {
+            height: 56px;
+        }
+
+        /* Slightly taller for modern feel */
+        .size-40px {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Modern Input Styling (Tabibi Style) */
+        .form-control,
+        .form-select {
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Specific overrides for inputs that were previously 'dark' */
+        .form-control-dark,
+        .form-select-dark {
+            background-color: #f8fafc;
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        /* Tooltip */
+        .tool-btn {
+            position: relative;
+        }
+
+        .tool-tooltip {
+            position: absolute;
+            left: 115%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 1050;
+            box-shadow: var(--shadow-md);
+        }
+
+        .tool-btn:hover .tool-tooltip {
+            opacity: 1;
+        }
+
+        /* Dropdown Menu */
+        .custom-dropdown-menu {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            width: 140px;
+            z-index: 1060;
+            box-shadow: var(--shadow-md);
+            border-radius: 0.5rem;
+            padding: 4px;
+        }
+
+        .dropdown-parent:hover .custom-dropdown-menu {
+            display: block;
+        }
+
+        .custom-dropdown-item {
+            color: var(--text-main);
+            padding: 8px 12px;
+            font-size: 12px;
+            display: block;
+            text-decoration: none;
+            text-align: left;
+            width: 100%;
+            background: none;
+            border: none;
+            border-radius: 4px;
+            transition: all 0.1s;
+        }
+
+        .custom-dropdown-item:hover {
+            background-color: #eff6ff;
+            color: var(--primary-blue);
+        }
+
+        /* --- WORKSPACE --- */
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            background-color: white;
+            position: relative;
+            /* Softer, more realistic paper shadow */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            margin: 50px auto;
+            transform-origin: top center;
+            overflow: hidden;
+            transition: transform 0.2s;
+            color: black;
+        }
+
+        /* Elements */
+        .doc-element {
+            position: absolute;
+            cursor: grab;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        .doc-element:hover {
+            outline: 1px dashed var(--primary-blue);
+        }
+
+        .doc-element.selected {
+            outline: 2px solid var(--primary-blue);
+            cursor: move;
+        }
+
+        .doc-element.locked {
+            cursor: not-allowed;
+        }
+
+        .doc-element.selected.locked {
+            outline-color: #ef4444;
+        }
+
+        .element-content {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .el-text .element-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 4px;
+        }
+
+        .el-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            pointer-events: none;
+        }
+
+        /* Handles */
+        .resize-handle {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border: 2px solid var(--primary-blue);
+            position: absolute;
+            border-radius: 50%;
+            z-index: 1001;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .doc-element.selected .resize-handle {
+            display: block;
+        }
+
+        .doc-element.locked .resize-handle {
+            display: none !important;
+        }
+
+        .handle-nw {
+            top: -6px;
+            left: -6px;
+            cursor: nw-resize;
+        }
+
+        .handle-ne {
+            top: -6px;
+            right: -6px;
+            cursor: ne-resize;
+        }
+
+        .handle-sw {
+            bottom: -6px;
+            left: -6px;
+            cursor: sw-resize;
+        }
+
+        .handle-se {
+            bottom: -6px;
+            right: -6px;
+            cursor: se-resize;
+        }
+
+        .element-content.editing {
+            cursor: text !important;
+            outline: 2px dashed #cbd5e1;
+            background: rgba(255, 255, 255, 0.9);
+            user-select: text;
+        }
+
+        /* --- PANELS --- */
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-main);
+            transition: background 0.1s;
+        }
+
+        .layer-item:hover {
+            background: #f8fafc;
+        }
+
+        .layer-item.active {
+            background: #eff6ff;
+            color: var(--primary-blue);
+            border-left: 3px solid var(--primary-blue);
+        }
+
+        .layer-item input {
+            font-weight: 500;
+        }
+
+        /* Print */
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+                transform: scale(1) !important;
+                left: 0 !important;
+                top: 0 !important;
+            }
+        }
