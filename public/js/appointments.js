@@ -117,7 +117,7 @@ function removeRow(btn, apptId) {
     // Show "No services" message if table is empty
     if (tbody.children.length === 0) {
         const msg = document.getElementById(`no-services-msg-${apptId}`);
-        if(msg) msg.style.display = 'block';
+        if (msg) msg.style.display = 'block';
     }
 }
 
@@ -231,11 +231,11 @@ function addItemToBlock(apptId, blockIndex, name = '', note = '', catalogId = ''
     const itemIndex = Date.now() + Math.random().toString().slice(2, 5);
 
     const row = document.createElement('tr');
-    
+
     // 1. Name Input with Live Search Logic (Hidden ID + Visible Input + Results Box)
     const tdName = document.createElement('td');
     tdName.className = 'ps-3 position-relative';
-    
+
     const hiddenId = document.createElement('input');
     hiddenId.type = 'hidden';
     hiddenId.name = `prescriptions[${blockIndex}][items][${itemIndex}][catalog_item_id]`;
@@ -291,9 +291,9 @@ function addItemToBlock(apptId, blockIndex, name = '', note = '', catalogId = ''
 function loadTemplateToBlock(select, apptId, blockIndex) {
     const templateId = select.value;
     if (!templateId) return;
-    
+
     select.value = ""; // Reset dropdown
-    
+
     fetch(`/prescriptions_templates/${templateId}`)
         .then(res => res.json())
         .then(data => {
@@ -330,7 +330,7 @@ function setupCatalogAutocomplete(input, resultsBox, hiddenIdInput) {
     input.addEventListener('input', function () {
         const q = this.value;
         if (q.length < 2) { resultsBox.style.display = 'none'; return; }
-        
+
         // Ensure route is defined (fallback if not)
         const searchUrl = (typeof catalogSearchRoute !== 'undefined') ? catalogSearchRoute : '/api/catalog/search';
 
@@ -344,18 +344,18 @@ function setupCatalogAutocomplete(input, resultsBox, hiddenIdInput) {
                         const btn = document.createElement('button');
                         btn.type = 'button';
                         btn.className = 'list-group-item list-group-item-action py-2 text-start small border-0 border-bottom';
-                        
-                        const badge = item.type === 'medicine' 
-                            ? '<span class="badge bg-success bg-opacity-10 text-success me-2">Med</span>' 
+
+                        const badge = item.type === 'medicine'
+                            ? '<span class="badge bg-success bg-opacity-10 text-success me-2">Med</span>'
                             : '<span class="badge bg-info bg-opacity-10 text-info me-2">Test</span>';
-                        
+
                         btn.innerHTML = `${badge} <strong>${item.name}</strong> <span class='text-muted ms-1'>${item.strength || ''}</span>`;
-                        
+
                         btn.onclick = () => {
                             input.value = item.name;
                             if (hiddenIdInput) hiddenIdInput.value = item.id;
                             resultsBox.style.display = 'none';
-                            
+
                             // Smart Note Logic (Populate dosage if available)
                             let smartNote = '';
                             if (item.default_quantity) {
@@ -365,7 +365,7 @@ function setupCatalogAutocomplete(input, resultsBox, hiddenIdInput) {
                                 else if (form.includes('spray')) unitText = 'Puff(s)';
                                 smartNote = `${item.default_quantity} ${unitText} x ${item.default_frequency}/day for ${item.default_duration} days`;
                             }
-                            
+
                             // Find the note input in the same row
                             const row = input.closest('tr');
                             const noteInput = row.querySelector('input[name*="[note]"]');
@@ -398,9 +398,9 @@ if (searchInput) {
     searchInput.addEventListener('input', function () {
         const query = this.value;
         if (query.length < 2) { resultsBox.style.display = 'none'; return; }
-        
+
         const searchUrl = (typeof patientSearchRoute !== 'undefined') ? patientSearchRoute : '/api/patients/search';
-        
+
         fetch(`${searchUrl}?q=${query}`)
             .then(res => res.json())
             .then(data => {

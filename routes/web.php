@@ -4,8 +4,10 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogItemController;
 use App\Http\Controllers\ClinicController;
+use App\Http\Controllers\ClinicImageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\MedicalServiceController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PrescriptionTemplateController;
@@ -69,6 +71,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/appointments/{appointment}/finish', [AppointmentController::class, 'finish'])
             ->name('appointments.finish');
 
+        Route::get('/documents/{id}/print', [DocumentController::class, 'printPreview'])->name('documents.print');
+
+        // Media Library Routes
+        Route::get('/api/images', [ClinicImageController::class, 'index'])->name('images.index');
+
 
     });
 
@@ -87,8 +94,20 @@ Route::middleware('auth')->group(function () {
 
         // route for document editor
         Route::get('/document-editor', function () {
-            return view('layouts.document_editor');
+            return view('layouts.editor.document_editor');
         })->name('document.editor');
+
+
+        Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+        Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+        Route::delete('/documents/{id}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+        Route::put('/documents/{id}', [DocumentController::class, 'update'])->name('documents.update');
+        // Editor Route
+        Route::get('/documents/{id}/edit', [DocumentController::class, 'edit'])->name('documents.editor');
+        Route::post('/documents/{id}/save', [DocumentController::class, 'updateContent'])->name('documents.update_content');
+
+        Route::post('/api/images', [ClinicImageController::class, 'store'])->name('images.store');
+        Route::delete('/api/images/{id}', [ClinicImageController::class, 'destroy'])->name('images.destroy');
 
     });
 

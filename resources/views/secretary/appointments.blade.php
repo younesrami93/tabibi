@@ -270,6 +270,8 @@
         const patientSearchRoute = "{{ route('api.patients.search') }}";
     </script>
     <script src="{{ asset('js/appointments.js') }}"></script>
+    <script src="{{ asset('js/finish_appointment_modal.js') }}"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             @if(isset($appointments) && !$appointments->isEmpty())

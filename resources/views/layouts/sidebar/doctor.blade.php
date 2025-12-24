@@ -37,6 +37,13 @@
     </a>
 </li>
 
+<li class="nav-item">
+    <a href="{{ route('documents.index') }}"
+        class="nav-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-file-lines"></i> Documents
+    </a>
+</li>
+
 
 <li class="px-3 mt-4 mb-2 text-uppercase text-white small">Finance</li>
 
