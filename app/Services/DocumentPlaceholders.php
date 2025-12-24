@@ -12,7 +12,8 @@ class DocumentPlaceholders
     /**
      * Main entry point. Pass any model, and it extracts the data.
      */
-    public static function map($model)
+
+    public static function map($model, $options = [])
     {
         $data = [];
 
@@ -20,53 +21,44 @@ class DocumentPlaceholders
         $data['{date}'] = now()->format('d/m/Y');
         $data['{time}'] = now()->format('H:i');
 
-        // 2. If it's a Patient Model (Directly)
+        // 2. If it's a Patient Model
         if ($model instanceof Patient) {
             $data = array_merge($data, self::mapPatient($model));
         }
 
-        // 3. If it's an Appointment (The Master Record)
+        // 3. If it's an Appointment
         if ($model instanceof Appointment) {
-            // Load relationships to avoid N+1 queries
             $model->load(['patient', 'doctor.clinic', 'services']);
 
-            // Map the linked patient
             if ($model->patient) {
                 $data = array_merge($data, self::mapPatient($model->patient));
             }
 
-            // Map the linked doctor/clinic
             if ($model->doctor) {
                 $data = array_merge($data, self::mapDoctor($model->doctor));
             }
 
-            // Map the appointment details
-            $data = array_merge($data, self::mapAppointment($model));
+            // [UPDATED] Pass options to mapAppointment
+            $data = array_merge($data, self::mapAppointment($model, $options));
         }
 
         return $data;
     }
 
-    /**
-     * Extract Patient Details
-     */
     private static function mapPatient(Patient $p)
     {
         return [
-            '{patient_name}' => $p->full_name, // Uses getFullNameAttribute
+            '{patient_name}' => $p->full_name,
             '{patient_first_name}' => $p->first_name,
             '{patient_last_name}' => $p->last_name,
             '{patient_phone}' => $p->phone ?? '-',
-            '{patient_age}' => $p->age,       // Uses getAgeAttribute
+            '{patient_age}' => $p->age,
             '{patient_gender}' => ucfirst($p->gender),
             '{patient_dob}' => $p->birth_date ? $p->birth_date->format('d/m/Y') : '-',
             '{patient_balance}' => number_format($p->current_balance, 2) . ' DH',
         ];
     }
 
-    /**
-     * Extract Doctor & Clinic Details
-     */
     private static function mapDoctor(User $u)
     {
         return [
@@ -74,78 +66,78 @@ class DocumentPlaceholders
             '{doctor_email}' => $u->email,
             '{doctor_phone}' => $u->phone ?? '',
             '{clinic_name}' => $u->clinic->name ?? 'Medical Clinic',
-            // If you have address in clinic settings:
             '{clinic_address}' => $u->clinic->settings['address'] ?? '',
         ];
     }
 
     /**
-     * Extract Appointment Details (Services, Rx, Finances)
+     * [UPDATED] Handle Specific Prescription Filtering
      */
-    private static function mapAppointment(Appointment $a)
+    private static function mapAppointment(Appointment $a, $options = [])
     {
+        // Check if we want a specific block (Rx 1, Rx 2...)
+        $targetIndex = $options['rx_index'] ?? null;
+
         return [
-            // Basic Info
             '{appt_id}' => $a->id,
             '{appt_date}' => $a->scheduled_at->format('d/m/Y'),
             '{appt_time}' => $a->scheduled_at->format('H:i'),
             '{appt_type}' => ucfirst($a->type),
             '{appt_status}' => ucfirst($a->status),
-
-            // Clinical
-            '{notes}' => $a->notes ?? '', // The diagnosis/observations
-
-            // Complex Parsing: Services List
+            '{notes}' => $a->notes ?? '',
             '{services_list}' => self::formatServices($a->services),
 
-            // Complex Parsing: Prescription List
-            '{prescription}' => self::formatPrescription($a->prescription),
+            // [UPDATED] Pass the index to the formatter
+            '{prescription}' => self::formatPrescription($a->prescription, $targetIndex),
 
-            // Financials
             '{price_total}' => number_format($a->total_price, 2) . ' DH',
             '{price_base}' => number_format($a->price, 2) . ' DH',
         ];
     }
 
-    /**
-     * Helper: Convert Services Collection to String
-     * Output Example: "Ultrasound (200 DH), ECG (150 DH)"
-     */
     private static function formatServices($services)
     {
         if ($services->isEmpty())
             return '';
 
         return $services->map(function ($s) {
-            // Check if pivot exists, otherwise default to base price
             $price = $s->pivot ? $s->pivot->price : $s->price;
             return "- {$s->name} (" . number_format($price, 0) . ")";
-        })->join("\n"); // <--- CHANGED from ', ' to "\n"
+        })->join("\n");
     }
 
     /**
-     * Helper: Convert JSON Prescription to HTML List
-     * Output Example: 
-     * - Paracetamol 100mg (2x/day)
-     * - Vitamin C
+     * [UPDATED] Helper: Filter by Index if provided
      */
-    private static function formatPrescription($json)
+    private static function formatPrescription($json, $specificIndex = null)
     {
         if (empty($json) || !is_array($json))
             return '';
 
         $lines = [];
 
-        foreach ($json as $block) {
-            // Optional: Add a header for the block if you want
-            // if (!empty($block['title'])) $lines[] = strtoupper($block['title']); 
+        // 1. Determine which blocks to process
+        // If index is provided and valid, filter to just that one block
+        if ($specificIndex !== null && isset($json[$specificIndex])) {
+            $blocksToProcess = [$json[$specificIndex]];
+        } else {
+            // Otherwise process all blocks (fallback or legacy behavior)
+            $blocksToProcess = $json;
+        }
+
+        // 2. Generate Text
+        foreach ($blocksToProcess as $block) {
+
+            // Optional: Include Title if printing multiple, but usually hidden for single Rx
+            // if (count($blocksToProcess) > 1 && !empty($block['title'])) {
+            //    $lines[] = strtoupper($block['title']);
+            // }
 
             if (isset($block['items']) && is_array($block['items'])) {
                 foreach ($block['items'] as $item) {
                     $name = $item['name'] ?? '';
                     $note = $item['note'] ?? '';
 
-                    // Build the string
                     $line = "- " . $name;
                     if (!empty($note)) {
                         $line .= " (" . $note . ")";
@@ -155,8 +147,6 @@ class DocumentPlaceholders
             }
         }
 
-        // Join with simple newlines. 
-        // The Blade view's nl2br() will handle the HTML conversion.
         return implode("\n", $lines);
     }
 }

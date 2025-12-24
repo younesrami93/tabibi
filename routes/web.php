@@ -72,9 +72,12 @@ Route::middleware('auth')->group(function () {
             ->name('appointments.finish');
 
         Route::get('/documents/{id}/print', [DocumentController::class, 'printPreview'])->name('documents.print');
-
+        Route::get('/documents/print-type/{type}', [DocumentController::class, 'printPreviewByType'])
+            ->name('documents.print.type');
         // Media Library Routes
         Route::get('/api/images', [ClinicImageController::class, 'index'])->name('images.index');
+
+        Route::get('/api/catalog/search', [CatalogItemController::class, 'search'])->name('api.catalog.search');
 
 
     });
@@ -87,7 +90,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('secretaries', SecretaryController::class)->except(['create', 'show', 'edit']);
 
         Route::resource('catalog', CatalogItemController::class)->only(['index', 'store', 'destroy']);
-        Route::get('/api/catalog/search', [CatalogItemController::class, 'search'])->name('api.catalog.search');
 
         Route::resource('prescriptions_templates', PrescriptionTemplateController::class)
             ->parameters(['prescriptions_templates' => 'template']);
@@ -102,6 +104,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
         Route::delete('/documents/{id}', [DocumentController::class, 'destroy'])->name('documents.destroy');
         Route::put('/documents/{id}', [DocumentController::class, 'update'])->name('documents.update');
+        Route::post('/documents/{id}/duplicate', [DocumentController::class, 'duplicate'])
+            ->name('documents.duplicate');
         // Editor Route
         Route::get('/documents/{id}/edit', [DocumentController::class, 'edit'])->name('documents.editor');
         Route::post('/documents/{id}/save', [DocumentController::class, 'updateContent'])->name('documents.update_content');

@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Services\DocumentPlaceholders;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class DocumentController extends Controller
 {
@@ -20,11 +21,13 @@ class DocumentController extends Controller
         return view('doctor.documents', compact('documents'));
     }
 
+
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'role' => 'nullable|string|max:50',
+            // VALIDATION: Use the Model's definition
+            'role' => ['nullable', Rule::in(Document::getRoles())],
         ]);
 
         $user = Auth::user();
@@ -33,7 +36,8 @@ class DocumentController extends Controller
             'clinic_id' => $user->clinic_id,
             'user_id' => $user->id,
             'name' => $request->name,
-            'role' => $request->role ?? 'General',
+            // Use constant or default
+            'role' => $request->role ?? Document::ROLE_GENERAL,
             'content' => [],
         ]);
 
@@ -102,15 +106,13 @@ class DocumentController extends Controller
         return response()->json(['success' => true]);
     }
 
-
     public function update(Request $request, $id)
     {
-        // Security: Ensure user owns the clinic
         $document = Document::where('clinic_id', Auth::user()->clinic_id)->findOrFail($id);
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'role' => 'nullable|string|max:50',
+            'role' => ['required', Rule::in(Document::getRoles())],
         ]);
 
         $document->update([
@@ -122,21 +124,66 @@ class DocumentController extends Controller
     }
 
 
+    public function duplicate($id)
+    {
+        // 1. Find Original
+        $original = Document::where('clinic_id', Auth::user()->clinic_id)->findOrFail($id);
+
+        // 2. Replicate (Laravel helper to copy attributes)
+        $newDoc = $original->replicate();
+
+        // 3. Customize the new copy
+        $newDoc->name = $original->name . ' - Copy';
+        $newDoc->created_by = Auth::id(); // Set current user as creator
+        $newDoc->created_at = now();
+        $newDoc->updated_at = now();
+
+        // 4. Save
+        $newDoc->save();
+
+        return redirect()->back()->with('success', 'Document duplicated successfully.');
+    }
+
+
+
     public function printPreview(Request $request, $id)
     {
         $document = Document::where('clinic_id', Auth::user()->clinic_id)->findOrFail($id);
+        return $this->renderPreview($request, $document);
+    }
 
+
+    public function printPreviewByType(Request $request, $type)
+    {
+        // Find the latest document with this role (e.g., 'prescription')
+        $document = Document::where('clinic_id', Auth::user()->clinic_id)
+            ->where('role', $type)
+            ->latest() // Get the most recently created one
+            ->first();
+
+        if (!$document) {
+            return response()->view('errors.404', [
+                'message' => "No template found for type: " . ucfirst($type) . ". Please create one in Documents."
+            ], 404);
+            // Or simply: abort(404, 'Template not found');
+        }
+
+        return $this->renderPreview($request, $document);
+    }
+
+
+
+    private function renderPreview(Request $request, Document $document)
+    {
         // 1. Identify Data Source
-        $modelType = $request->query('model'); // e.g., 'appointment', 'patient'
+        $modelType = $request->query('model');
         $modelId = $request->query('id');
+        $options = ['rx_index' => $request->query('rx_index')];
 
-        $dataModel = null;
         $placeholders = [];
 
         // 2. Fetch Data Dynamically
         if ($modelType && $modelId) {
-            // Mapping string 'appointment' to Model Class
-            // You can use a switch, or Laravel's Relation::morphMap if defined
             $modelClass = match ($modelType) {
                 'appointment' => \App\Models\Appointment::class,
                 'patient' => \App\Models\Patient::class,
@@ -147,20 +194,17 @@ class DocumentController extends Controller
             if ($modelClass) {
                 $dataModel = $modelClass::find($modelId);
                 if ($dataModel) {
-                    // 3. Generate Placeholders Dictionary
-                    $placeholders = DocumentPlaceholders::map($dataModel);
+                    $placeholders = DocumentPlaceholders::map($dataModel, $options);
                 }
             }
         }
 
-        // 4. Hydrate (Search & Replace)
-        // We do this in PHP so the View receives "clean" data
+        // 3. Hydrate Content
         $content = $document->content;
         $elements = $content['elements'] ?? [];
 
         foreach ($elements as &$el) {
             if ($el['type'] === 'text' && !empty($el['content'])) {
-                // Replace all keys in the content
                 $el['content'] = str_replace(
                     array_keys($placeholders),
                     array_values($placeholders),

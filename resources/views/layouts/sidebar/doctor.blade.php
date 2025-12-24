@@ -11,18 +11,14 @@
     </a>
 </li>
 
+<li class="px-3 mt-4 mb-2 text-uppercase small">Catalogs</li>
+
 <li class="nav-item">
     <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
         <i class="fa-solid fa-briefcase-medical"></i> Services
     </a>
 </li>
 
-<li class="nav-item">
-    <a href="{{ route('secretaries.index') }}"
-        class="nav-link {{ request()->routeIs('secretaries.*') ? 'active' : '' }}">
-        <i class="fa-solid fa-id-badge"></i> My Staff
-    </a>
-</li>
 
 <li class="nav-item">
     <a href="{{ route('catalog.index') }}" class="nav-link {{ request()->routeIs('catalog.*') ? 'active' : '' }}">
@@ -38,14 +34,21 @@
 </li>
 
 <li class="nav-item">
-    <a href="{{ route('documents.index') }}"
-        class="nav-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+    <a href="{{ route('documents.index') }}" class="nav-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
         <i class="fa-solid fa-file-lines"></i> Documents
     </a>
 </li>
 
 
-<li class="px-3 mt-4 mb-2 text-uppercase text-white small">Finance</li>
+<li class="px-3 mt-4 mb-2 text-uppercase small">Finance</li>
+
+
+<li class="nav-item">
+    <a href="{{ route('secretaries.index') }}"
+        class="nav-link {{ request()->routeIs('secretaries.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-id-badge"></i> My Staff
+    </a>
+</li>
 
 <li class="nav-item">
     <a href="#" class="nav-link">

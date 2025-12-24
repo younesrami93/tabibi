@@ -24,6 +24,46 @@ class Document extends Model
         'content' => 'array',
     ];
 
+
+
+    const ROLE_GENERAL = 'general';
+    const ROLE_PRESCRIPTION = 'prescription';
+    const ROLE_INVOICE = 'invoice';
+    const ROLE_CERTIFICATE = 'medical_certificate';
+    const ROLE_REFERRAL = 'referral_letter';
+    const ROLE_REPORT = 'medical_report';
+    const ROLE_CONSENT = 'consent_form';
+
+    /**
+     * Returns the list of valid roles for validation
+     */
+    public static function getRoles()
+    {
+        return [
+            self::ROLE_GENERAL,
+            self::ROLE_PRESCRIPTION,
+            self::ROLE_INVOICE,
+            self::ROLE_CERTIFICATE,
+            self::ROLE_REFERRAL,
+            self::ROLE_REPORT,
+            self::ROLE_CONSENT,
+        ];
+    }
+
+    public static function getRoleLabels()
+    {
+        return [
+            self::ROLE_GENERAL => 'General Document',
+            self::ROLE_PRESCRIPTION => 'Prescription (Ordonnance)',
+            self::ROLE_INVOICE => 'Invoice (Facture)',
+            self::ROLE_CERTIFICATE => 'Medical Certificate',
+            self::ROLE_REFERRAL => 'Referral Letter (Orientation)',
+            self::ROLE_REPORT => 'Medical Report',
+            self::ROLE_CONSENT => 'Consent Form',
+        ];
+    }
+
+
     public function clinic()
     {
         return $this->belongsTo(Clinic::class);

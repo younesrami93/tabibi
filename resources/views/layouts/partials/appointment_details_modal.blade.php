@@ -127,12 +127,25 @@
                                                     <div class="border rounded-3 overflow-hidden h-100">
                                                         {{-- Prescription Header --}}
                                                         <div
-                                                            class="bg-surface-secondary px-4 py-2 border-bottom d-flex justify-content-between align-items-center">
-                                                            <span
-                                                                class="fw-bold text-dark small">{{ $block['title'] ?? 'Prescription #' . ($index + 1) }}</span>
-                                                            <i class="fa-solid fa-file-medical text-muted opacity-25"></i>
-                                                        </div>
-                                                        {{-- Items List --}}
+                                                            class="bg-surface-secondary px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
+                                                            {{-- Left: Title --}}
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <i class="fa-solid fa-file-medical text-primary opacity-50"></i>
+                                                                <span class="fw-bold text-dark small">
+                                                                    {{ $block['title'] ?? 'Prescription #' . ($index + 1) }}
+                                                                </span>
+                                                            </div>
+
+                                                            {{-- Right: Print Button --}}
+                                                            {{-- We use ID 1 for the template as requested, and pass the appointment
+                                                            ID via query string --}}
+                                                            <a href="{{ route('documents.print.type', 'prescription') }}?model=appointment&id={{ $appt->id }}&rx_index={{ $index }}"
+                                                                target="_blank"
+                                                                class="btn btn-sm btn-white border shadow-sm py-0 px-2 x-small fw-bold text-secondary"
+                                                                title="Print this prescription">
+                                                                <i class="fa-solid fa-print me-1"></i> Print
+                                                            </a>
+                                                        </div> {{-- Items List --}}
                                                         <div class="px-4 py-2">
                                                             <ul class="list-unstyled mb-0">
                                                                 @foreach($block['items'] as $item)
@@ -167,6 +180,13 @@
                                 <div
                                     class="card-header bg-dark text-white py-3 px-4 fw-bold small text-uppercase tracking-wide">
                                     Invoice Summary
+
+                                    <a href="{{ route('documents.print.type', 'invoice') }}?model=appointment&id={{ $appt->id }}"
+                                        target="_blank"
+                                        class="btn btn-sm btn-light border py-0 px-2 x-small fw-bold text-primary"
+                                        title="Print this invoice">
+                                        <i class="fa-solid fa-print me-1"></i> Print
+                                    </a>
                                 </div>
                                 <div class="card-body p-4">
                                     {{-- 1. Consultation Fee --}}

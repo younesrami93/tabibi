@@ -4,6 +4,9 @@
 
 @section('content')
 
+
+
+
     {{-- ALERT: Missed Appointments --}}
     @if(isset($missedCount) && $missedCount > 0)
         <div class="alert alert-warning border-0 shadow-sm d-flex justify-content-between align-items-center mb-4">
@@ -151,6 +154,7 @@
                                         'waiting' => 'primary',
                                         'preparing' => 'warning',
                                         'in_consultation' => 'success',
+                                        'pending_payment' => 'info',
                                         'finished' => 'dark',
                                         'cancelled' => 'danger'
                                     ];
@@ -201,11 +205,36 @@
                                         </form>
                                     @endif
 
+                                    {{-- 2. IN CONSULTATION --}}
                                     @if($appt->status == 'in_consultation')
-                                        <button class="btn btn-sm btn-primary fw-bold rounded-pill px-3 shadow-sm"
-                                            data-bs-toggle="modal" data-bs-target="#finishModal-{{ $appt->id }}">
-                                            <i class="fa-solid fa-check-double me-1"></i> Finish
-                                        </button>
+                                        @if(auth()->user()->role === 'doctor')
+                                            {{-- Doctor: Finish -> Pending Payment --}}
+                                            <button class="btn btn-sm btn-primary fw-bold rounded-pill px-3 shadow-sm"
+                                                data-bs-toggle="modal" data-bs-target="#finishModal-{{ $appt->id }}">
+                                                <i class="fa-solid fa-check me-1"></i> Finish
+                                            </button>
+                                        @else
+                                            {{-- Secretary: Force Finish -> Finished directly --}}
+                                            {{-- Useful if doctor forgets to click finish --}}
+                                            <button class="btn btn-sm btn-outline-dark fw-bold rounded-pill px-3 shadow-sm"
+                                                data-bs-toggle="modal" data-bs-target="#finishModal-{{ $appt->id }}"
+                                                title="Close consultation and collect payment">
+                                                <i class="fa-solid fa-check-double me-1"></i> Finish
+                                            </button>
+                                        @endif
+                                    @endif
+
+
+                                    {{-- BUTTON 2: PENDING PAYMENT (Only Secretary sees this) --}}
+                                    @if($appt->status == 'pending_payment')
+                                        @if(auth()->user()->role !== 'doctor')
+                                            <button class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-3 shadow-sm"
+                                                data-bs-toggle="modal" data-bs-target="#finishModal-{{ $appt->id }}">
+                                                <i class="fa-solid fa-cash-register me-1"></i> Collect Payment
+                                            </button>
+                                        @else
+                                            <span class="badge bg-info bg-opacity-10 text-info">Sent to Secretary</span>
+                                        @endif
                                     @endif
 
                                     {{-- Dropdown --}}
@@ -282,5 +311,22 @@
             attachPaymentListeners();
         });
     </script>
+
+
+
+    {{-- SPECIAL SECTION: Render the modal for the just-finished appointment --}}
+    @if(isset($flashAppointment))
+        {{-- Reuse your existing modal file for this specific appointment --}}
+        @include('layouts.partials.appointment_details_modal', ['appt' => $flashAppointment])
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Open the modal immediately
+                var myModal = new bootstrap.Modal(document.getElementById('viewModal-{{ $flashAppointment->id }}'));
+                myModal.show();
+            });
+        </script>
+    @endif
+
 
 @endsection
