@@ -157,7 +157,7 @@ function addNewPrescriptionBlock(apptId) {
     const index = Date.now();
 
     const blockHtml = `
-        <div class="card border rounded-3 shadow-sm prescription-block fade-in" id="pBlock-${apptId}-${index}">
+        <div class="card overflow-visible border rounded-3 shadow-sm prescription-block fade-in" id="pBlock-${apptId}-${index}">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
                 <div class="d-flex align-items-center gap-2">
                     <i class="fa-solid fa-file-prescription text-success"></i>
@@ -176,7 +176,7 @@ function addNewPrescriptionBlock(apptId) {
                 </div>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="">
                     <table class="table table-sm align-middle mb-0">
                         <thead class="bg-light">
                             <tr>

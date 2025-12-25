@@ -12,90 +12,118 @@ use Illuminate\Support\Facades\DB;
 class AppointmentController extends Controller
 {
 
-    public function index(Request $request)
+
+
+
+    private function getAppointmentsQuery(Request $request)
     {
         $clinic = Auth::user()->clinic;
-
-        $templates = PrescriptionTemplate::where('clinic_id', $clinic->id)->get();
-
         $query = Appointment::where('clinic_id', $clinic->id)
             ->with(['patient', 'doctor', 'services', 'history.user']);
-        $appointments = $query->get();
 
-        // 1. Base Query
-        // 2. FILTERING LOGIC
-        $filterMode = $request->get('filter_mode', 'today_active'); // Default: Today's To-Do List
+        // 1. GLOBAL SEARCH
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('patient', function ($p) use ($search) {
+                    $p->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                })
+                    ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
 
-        if ($filterMode === 'history') {
-            // Show past appointments (yesterday and older)
-            $query->whereDate('scheduled_at', '<', now());
-        } elseif ($filterMode === 'all') {
-            // Show everything (Today + Past) - useful for searching
-        } else {
-            // 'today_active' (Default) or 'today_completed'
-            // Default to TODAY
-            $query->whereDate('scheduled_at', request('date', now()->format('Y-m-d')));
+        // 2. PRESET MODES (Quick Tabs)
+        // These serve as "Base Rules" that can be overridden by specific filters below
+        $mode = $request->get('quick_filter', 'today_active'); // Default
 
-            if ($filterMode === 'today_active') {
-                // Hide finished/cancelled to keep the list clean for work
+        if ($mode === 'today_active') {
+            // "My Workspace": Today only, hide finished/cancelled
+            if (!$request->filled('date_from') && !$request->filled('date_to')) {
+                $query->whereDate('scheduled_at', now());
+            }
+            if (!$request->filled('statuses')) {
                 $query->whereNotIn('status', ['finished', 'cancelled', 'no_show']);
             }
+        } elseif ($mode === 'history') {
+            // "Archives": Anything before today
+            if (!$request->filled('date_from') && !$request->filled('date_to')) {
+                $query->whereDate('scheduled_at', '<', now());
+            }
+        }
+        // 'all' mode applies no base restrictions
+
+        // 3. ADVANCED FILTERS (Overrides)
+
+        // A. Specific Statuses (e.g., "Show me only Cancelled")
+        if ($request->filled('statuses')) {
+            $statuses = explode(',', $request->statuses);
+            $query->whereIn('status', $statuses);
         }
 
-        // Optional: Filter by specific status if selected in dropdown
-        if ($request->filled('status_filter')) {
-            $query->where('status', $request->status_filter);
+        // B. Date Range
+        if ($request->filled('date_from')) {
+            $query->whereDate('scheduled_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('scheduled_at', '<=', $request->date_to);
         }
 
-
-        // 3. SORTING LOGIC (The "Golden Rules")
-        // Priority 1: In Consultation (Always Top)
-        // Priority 2: Preparing (Next)
-        // Priority 3: Urgency (But only if they are waiting/scheduled)
-        // Priority 4: Clinic Queue Mode (First-In-First-Out vs Time)
-
+        // 4. SORTING
+        // We keep the logic: In Consultation first, then status, then time.
         $query->orderByRaw("
             CASE 
                 WHEN status = 'in_consultation' THEN 1
                 WHEN status = 'preparing' THEN 2
-                WHEN type = 'urgency' AND status IN ('waiting', 'scheduled') THEN 3
                 ELSE 4
             END ASC
         ");
 
-        // Secondary Sort: Clinic Preference
-        $queueMode = $clinic->settings['queue_mode'] ?? 'scheduled';
-        if ($queueMode === 'fifo') {
-            $query->orderBy('id', 'asc'); // Ticket System
-        } else {
-            $query->orderBy('scheduled_at', 'asc'); // Appointment Time System
-        }
+        // Chronological sort
+        $query->orderBy('scheduled_at', 'desc'); // Newer first is usually better for lists, but switch to 'asc' if you prefer "Next up"
 
-        $appointments = $query->get();
+        return $query;
+    }
 
-        // Check for missed past appointments (only relevant if not looking at history)
-        $missedCount = 0;
-        if ($filterMode === 'today_active') {
-            $missedCount = Appointment::where('clinic_id', $clinic->id)
-                ->where('scheduled_at', '<', now()->startOfDay())
-                ->whereIn('status', ['scheduled', 'waiting'])
-                ->count();
-        }
-
-
+    public function index(Request $request)
+    {
+        $clinic = Auth::user()->clinic;
+        $templates = PrescriptionTemplate::where('clinic_id', $clinic->id)->get();
         $allServices = MedicalService::where('clinic_id', $clinic->id)->get();
 
+        $appointments = $this->getAppointmentsQuery($request)
+            ->paginate(15)
+            ->appends($request->all());
+
+        // Simple count for missed items (Legacy logic)
+        $missedCount = Appointment::where('clinic_id', $clinic->id)
+            ->where('scheduled_at', '<', now()->startOfDay())
+            ->whereIn('status', ['scheduled', 'waiting'])
+            ->count();
 
         $flashAppointment = null;
         if (session()->has('show_view_modal')) {
-            // Fetch the specific appointment because it might be hidden from the main list
             $flashAppointment = Appointment::with(['patient', 'services', 'history.user'])
                 ->find(session('show_view_modal'));
         }
 
-
-        return view('secretary.appointments', compact('appointments', "flashAppointment", 'missedCount', 'allServices', 'templates'));
+        return view('secretary.appointments', compact('appointments', 'flashAppointment', 'missedCount', 'allServices', 'templates'));
     }
+
+    public function fetchTable(Request $request)
+    {
+        $appointments = $this->getAppointmentsQuery($request)
+            ->paginate(15)
+            ->appends($request->all());
+
+        return response()->json([
+            'html' => view('layouts.partials.appointments_table_rows', compact('appointments'))->render(),
+            'pagination' => $appointments->links()->toHtml(),
+        ]);
+    }
+
+
     public function store(Request $request)
     {
         $request->validate([

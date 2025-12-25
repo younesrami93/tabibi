@@ -59,6 +59,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
         Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
 
+
+        Route::get('/appointments/fetch', [AppointmentController::class, 'fetchTable'])
+            ->name('appointments.fetch');
+
+        Route::resource('prescriptions_templates', PrescriptionTemplateController::class)
+            ->parameters(['prescriptions_templates' => 'template']);
+
         Route::put('/appointments/{id}/complete-control', [AppointmentController::class, 'markControlDone'])
             ->name('appointments.complete_control');
 
@@ -91,9 +98,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('secretaries', SecretaryController::class)->except(['create', 'show', 'edit']);
 
         Route::resource('catalog', CatalogItemController::class)->only(['index', 'store', 'destroy']);
-
-        Route::resource('prescriptions_templates', PrescriptionTemplateController::class)
-            ->parameters(['prescriptions_templates' => 'template']);
 
         // route for document editor
         Route::get('/document-editor', function () {

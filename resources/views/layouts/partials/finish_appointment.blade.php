@@ -82,7 +82,7 @@
                                         @endphp
 
                                         @foreach($existingPrescriptions as $pIndex => $block)
-                                            <div class="card border rounded-3 shadow-sm prescription-block"
+                                            <div class="card overflow-visible border rounded-3 shadow-sm prescription-block"
                                                 id="pBlock-{{ $appt->id }}-{{ $pIndex }}">
                                                 <div
                                                     class="card-header bg-white d-flex justify-content-between align-items-center py-2">
@@ -111,7 +111,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="card-body p-0">
-                                                    <div class="table-responsive">
+                                                    <div class="">
                                                         <table class="table table-sm align-middle mb-0">
                                                             <thead class="bg-light">
                                                                 <tr>
