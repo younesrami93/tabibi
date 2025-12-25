@@ -1,0 +1,99 @@
+ body {
+            background-color: #f3f4f6;
+            display: block; 
+            text-align: center;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            font-family: 'Inter', sans-serif;
+            overflow-y: auto;
+            margin: 0;
+        }
+
+        #page-container {
+            background-color: white;
+            position: relative;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            background-size: 100% 100%;
+            overflow: hidden; 
+            display: inline-block;
+            text-align: left;
+            margin: 0 auto;
+            
+            /* FORCE GRAPHICS ON SCREEN */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .print-element {
+            position: absolute;
+            outline: none; 
+        }
+        
+        .print-element[contenteditable="true"]:hover {
+            outline: 1px dashed #ccc;
+            cursor: text;
+        }
+
+        /* Floating Actions */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+        }
+
+        .btn-circle {
+            width: 60px; height: 60px; border-radius: 50%; border: none;
+            background: #2563eb; color: white; font-size: 24px;
+            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .btn-circle:hover { transform: scale(1.1); }
+        .btn-circle.sec { background: #64748b; width: 50px; height: 50px; font-size: 20px; }
+
+        /* --- PRINT SPECIFICS --- */
+        @media print {
+            @page {
+                /* 1. FORCE PAPER SIZE (A4, A5, etc) */
+                size: {{ $cssSize }}; 
+                
+                /* 2. REMOVE BROWSER MARGINS */
+                margin: 0; 
+            }
+
+            body {
+                /* 3. FORCE BACKGROUND GRAPHICS (Colors & Images) */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                
+                margin: 0 !important; 
+                padding: 0 !important; 
+                background: white !important; 
+                width: 100%;
+                height: auto !important; 
+                overflow: visible !important; 
+            }
+
+            .no-print { 
+                display: none !important; 
+            }
+
+            #page-container { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                border: none !important;
+                position: absolute !important;
+                top: 0;
+                left: 0;
+                width: {{ $pWidth }}px !important;
+                height: {{ $pHeight }}px !important;
+                page-break-after: avoid !important;
+                
+                /* Double-check graphics for the container */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }

@@ -3,6 +3,8 @@
 // ==========================================
 // 2. FINISH APPOINTMENT MODAL LOGIC
 // ==========================================
+
+
 const manualPaymentEdits = {};
 
 // --- A. Service Management (Select & Custom) ---

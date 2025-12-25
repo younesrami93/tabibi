@@ -148,7 +148,7 @@
 
     <div id="varModal"
         class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 z-3 d-none align-items-center justify-content-center"
-        style="backdrop-filter: blur(2px);z-index: 10050;">
+        style="backdrop-filter: blur(2px);z-index: 10050 !important;">
         <div class="bg-white rounded-3 shadow-lg border border-theme d-flex flex-column"
             style="width: 500px; max-height: 80vh;">
 
@@ -212,6 +212,19 @@
                             Price</button>
                         <button onclick="addVar('{price_total}')" class="btn btn-xs btn-outline-secondary">Total
                             Price</button>
+                        <button onclick="addVar('{patient_balance}')" class="btn btn-xs btn-outline-danger">Current
+                            Debt/Credit</button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 11px;">IDs and
+                        Codes</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button onclick="addVar('{a-barcode}')" class="btn btn-xs btn-outline-secondary">Appointment Bar
+                            code</button>
+                        <button onclick="addVar('{p-barcode}')" class="btn btn-xs btn-outline-secondary">Patient Bar
+                            code</button>
                         <button onclick="addVar('{patient_balance}')" class="btn btn-xs btn-outline-danger">Current
                             Debt/Credit</button>
                     </div>

@@ -3,11 +3,121 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\Patient;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+
 
 class DashboardController extends Controller
 {
+
+
+    // ... existing code ...
+
+
+
+    public function globalSearch(Request $request)
+    {
+        $query = trim($request->get('query'));
+        if (empty($query))
+            return response()->json([]);
+
+        $results = [];
+        $clinicId = \Illuminate\Support\Facades\Auth::user()->clinic_id;
+
+        // ==========================================
+        // PRIORITY 1: APPOINTMENTS
+        // Supports: "5050" or "a5050"
+        // ==========================================
+        $apptId = null;
+        if (preg_match('/^a(\d+)$/i', $query, $matches)) {
+            $apptId = $matches[1];
+        } elseif (is_numeric($query)) {
+            $apptId = $query;
+        }
+
+        if ($apptId) {
+            $appointment = \App\Models\Appointment::with('patient')
+                ->where('clinic_id', $clinicId)
+                ->find($apptId);
+
+            if ($appointment) {
+                $url = route('patients.show', $appointment->patient_id) . "?open_appt={$appointment->id}";
+                $results[] = [
+                    'type' => 'appointment',
+                    'icon' => '<i class="fa-solid fa-calendar-check text-primary"></i>',
+                    'title' => "Appointment #{$appointment->id}",
+                    'subtitle' => $appointment->patient->full_name . " • " . ucfirst($appointment->status),
+                    'meta' => $appointment->scheduled_at->format('d M H:i'),
+                    'url' => $url,
+                ];
+            }
+        }
+
+        // ==========================================
+        // PRIORITY 2: PATIENT BY ID (Exact Match)
+        // Supports: "1024" or "p1024"
+        // ==========================================
+        $patientId = null;
+        if (preg_match('/^p(\d+)$/i', $query, $matches)) {
+            $patientId = $matches[1]; // Found 'p' prefix (e.g. p1024 -> 1024)
+        } elseif (is_numeric($query)) {
+            $patientId = $query;      // Pure number (e.g. 1024)
+        }
+
+        $foundPatientById = null;
+
+        if ($patientId) {
+            $foundPatientById = \App\Models\Patient::where('clinic_id', $clinicId)->find($patientId);
+
+            if ($foundPatientById) {
+                $results[] = [
+                    'type' => 'patient',
+                    'icon' => '<i class="fa-solid fa-id-badge text-info"></i>', // Distinct Icon for ID match
+                    'title' => $foundPatientById->full_name,
+                    'subtitle' => "ID: {$foundPatientById->id} • CIN: {$foundPatientById->cin}",
+                    'meta' => 'ID Match', // Verified by ID
+                    'url' => route('patients.show', $foundPatientById->id),
+                ];
+            }
+        }
+
+        // ==========================================
+        // PRIORITY 3: GENERAL PATIENT SEARCH
+        // Supports: Name, Phone, and CIN (including "P12345")
+        // ==========================================
+        if (count($results) < 6) {
+            $patients = \App\Models\Patient::where('clinic_id', $clinicId)
+                ->where(function ($q) use ($query) {
+                    $q->where('first_name', 'like', "%{$query}%")
+                        ->orWhere('last_name', 'like', "%{$query}%")
+                        ->orWhere('cin', 'like', "%{$query}%")  // This naturally handles CINs like 'P12345'
+                        ->orWhere('phone', 'like', "%{$query}%");
+                })
+                // Exclude the patient we already found in Priority 2 (to avoid duplicates)
+                ->when($foundPatientById, function ($q) use ($foundPatientById) {
+                    return $q->where('id', '!=', $foundPatientById->id);
+                })
+                ->limit(6 - count($results)) // Fill remaining slots
+                ->get();
+
+            foreach ($patients as $patient) {
+                $results[] = [
+                    'type' => 'patient',
+                    'icon' => '<i class="fa-solid fa-user-injured text-success"></i>',
+                    'title' => $patient->full_name,
+                    'subtitle' => "CIN: {$patient->cin} • {$patient->phone}",
+                    'meta' => $patient->age . ' yrs',
+                    'url' => route('patients.show', $patient->id),
+                ];
+            }
+        }
+
+        return response()->json($results);
+    }
+
+
     public function index()
     {
         $user = Auth::user();

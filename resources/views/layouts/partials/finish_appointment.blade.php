@@ -208,23 +208,39 @@
                                             <table class="table table-hover align-middle mb-0">
                                                 <tbody id="serviceRows-{{ $appt->id }}">
                                                     {{-- PRE-FILL: Loop Existing Services --}}
-                                                    @foreach($appt->services as $ix => $s)
+                                                    @foreach($appt->invoiceItems as $ix => $item)
                                                         <tr class="service-row">
                                                             <td class="ps-3 border-0">
-                                                                <input type="hidden" name="services[{{ $ix }}][id]"
-                                                                    value="{{ $s->id }}">
-                                                                <input type="text"
-                                                                    class="form-control form-control-sm bg-white border-0 fw-bold"
-                                                                    value="{{ $s->name }}" readonly>
+                                                                {{-- LOGIC: Determine how to identify this item --}}
+                                                                @if($item->medical_service_id)
+                                                                    {{-- Case A: Standard Service (Send ID) --}}
+                                                                    <input type="hidden" name="services[{{ $ix }}][id]"
+                                                                        value="{{ $item->medical_service_id }}">
+                                                                @else
+                                                                    {{-- Case B: Custom Service (Send Name) --}}
+                                                                    <input type="hidden" name="services[{{ $ix }}][custom_name]"
+                                                                        value="{{ $item->custom_name }}">
+                                                                @endif
+
+                                                                {{-- Display Name --}}
+                                                                <div class="d-flex align-items-center">
+                                                                    @if(!$item->medical_service_id)
+                                                                        <i class="fa-solid fa-pen-nib text-muted me-2 small opacity-50"
+                                                                            title="Custom Service"></i>
+                                                                    @endif
+                                                                    <input type="text"
+                                                                        class="form-control form-control-sm bg-white border-0 fw-bold"
+                                                                        value="{{ $item->name }}" readonly>
+                                                                </div>
                                                             </td>
-                                                            <td class="border-0" width="120">
+                                                            <td class="border-0" width="200">
                                                                 <div class="input-group input-group-sm">
-                                                                    {{-- Note: we use pivot->price to show the price it was
-                                                                    saved with --}}
+                                                                    {{-- Note: use $item->price directly from the pivot row
+                                                                    --}}
                                                                     <input type="number" step="0.01"
                                                                         class="form-control text-end price-input border-0 bg-light fw-bold"
                                                                         name="services[{{ $ix }}][price]"
-                                                                        value="{{ $s->pivot->price }}"
+                                                                        value="{{ $item->price }}"
                                                                         oninput="calculateTotal({{ $appt->id }})">
                                                                     <span
                                                                         class="input-group-text border-0 bg-light text-muted small">DH</span>
@@ -348,3 +364,42 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Initial calculation on modal load
+    document.addEventListener("DOMContentLoaded", function () {
+        calculateTotal({{ $appt->id }});
+    });
+</script>
+<style>
+    /* Scoped Styles for this Modal */
+    .bg-surface-secondary {
+        background-color: #f8fafc;
+    }
+
+    .tracking-wide {
+        letter-spacing: 0.08em;
+    }
+
+    .last-no-border:last-child {
+        border-bottom: none !important;
+    }
+
+    .avatar-circle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .x-small {
+        font-size: 0.7rem;
+    }
+
+    /* Desktop border for header separation */
+    @media (min-width: 768px) {
+        .border-start-md {
+            border-left: 1px solid #dee2e6 !important;
+        }
+    }
+</style>

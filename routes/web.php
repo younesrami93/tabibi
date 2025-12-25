@@ -79,7 +79,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/api/catalog/search', [CatalogItemController::class, 'search'])->name('api.catalog.search');
 
-
+        Route::get('/appointments/{id}/modal', [AppointmentController::class, 'showModal'])->name('appointments.modal');
+        Route::get('/appointments/{id}/finish-modal', [AppointmentController::class, 'showFinishModal'])->name('appointments.finish-modal');
     });
 
     // -------------------------------------------------------
@@ -115,6 +116,8 @@ Route::middleware('auth')->group(function () {
 
     });
 
+
+    Route::get('/global-search', [DashboardController::class, 'globalSearch'])->name('global.search');
 });
 
 

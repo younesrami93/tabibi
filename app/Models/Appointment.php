@@ -37,7 +37,12 @@ class Appointment extends Model
     public function services(): BelongsToMany
     {
         return $this->belongsToMany(MedicalService::class, 'appointment_service')
-            ->withPivot('price');
+            ->withPivot('price', 'custom_name');
+    }
+
+    public function invoiceItems()
+    {
+        return $this->hasMany(AppointmentService::class);
     }
     // In Appointment.php
 

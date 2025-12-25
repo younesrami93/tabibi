@@ -194,7 +194,7 @@ class AppointmentController extends Controller
 
         // Validate inputs
         $request->validate([
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0', // Base Consultation Fee
             'services' => 'array',
             'prescriptions' => 'array',
             'paid_amount' => 'nullable|numeric|min:0',
@@ -202,27 +202,52 @@ class AppointmentController extends Controller
 
         DB::transaction(function () use ($request, $appointment) {
 
-            // 1. PROCESS SERVICES (Same for everyone)
-            $syncData = [];
+            // ====================================================
+            // 1. PROCESS SERVICES (Standard & Custom)
+            // ====================================================
+
+            // A. Clear old items first (This allows you to edit/update the invoice later)
+            // Make sure you have created the AppointmentService model as discussed
+            \App\Models\AppointmentService::where('appointment_id', $appointment->id)->delete();
+
             $servicesTotal = 0;
-            $customServicesList = [];
+            $itemsToInsert = [];
 
             if ($request->has('services')) {
                 foreach ($request->services as $serviceData) {
                     $sPrice = $serviceData['price'] ?? 0;
                     $servicesTotal += $sPrice;
 
+                    // Prepare the row for the pivot table
+                    $row = [
+                        'appointment_id' => $appointment->id,
+                        'price' => $sPrice,
+                        'created_by' => auth()->id(),
+                    ];
+
+                    // Case A: Standard Catalog Service (Has ID)
                     if (isset($serviceData['id'])) {
-                        $syncData[$serviceData['id']] = ['price' => $sPrice];
-                    } elseif (isset($serviceData['custom_name'])) {
-                        $customServicesList[] = $serviceData['custom_name'] . ' (' . $sPrice . ' DH)';
+                        $row['medical_service_id'] = $serviceData['id'];
+                        $row['custom_name'] = null;
                     }
+                    // Case B: Custom Service (No ID, just text)
+                    elseif (isset($serviceData['custom_name'])) {
+                        $row['medical_service_id'] = null;
+                        $row['custom_name'] = $serviceData['custom_name'];
+                    }
+
+                    $itemsToInsert[] = $row;
                 }
             }
-            // Sync services to pivot
-            $appointment->services()->sync($syncData);
 
-            // 2. PROCESS PRESCRIPTIONS (Same for everyone)
+            // Bulk Insert all items into the updated table
+            if (!empty($itemsToInsert)) {
+                \App\Models\AppointmentService::insert($itemsToInsert);
+            }
+
+            // ====================================================
+            // 2. PROCESS PRESCRIPTIONS (Nested JSON)
+            // ====================================================
             $finalPrescriptionData = [];
             if ($request->has('prescriptions')) {
                 foreach ($request->prescriptions as $block) {
@@ -247,37 +272,30 @@ class AppointmentController extends Controller
                 }
             }
 
-            // 3. ROLE-BASED WORKFLOW (Doctor vs Secretary)
+            // ====================================================
+            // 3. ROLE-BASED WORKFLOW & FINANCIALS
+            // ====================================================
             $user = Auth::user();
 
             $basePrice = $request->price;
             $grandTotal = $basePrice + $servicesTotal;
+
+            // We keep notes clean now (No need to append custom services text here)
             $finalNotes = $request->notes;
-            if (!empty($customServicesList)) {
-                $finalNotes .= "\n\n[Custom Services]: " . implode(', ', $customServicesList);
-            }
 
             // --- DOCTOR LOGIC ---
             if ($user->role === 'doctor') {
-
-                // Doctor sets it to 'pending_payment'
-                // Doctor DOES NOT touch the patient balance or 'is_paid'
                 $updateData = [
                     'status' => 'pending_payment',
-                    // We assume Doctor finishes the medical side, so we mark finished_at
                     'finished_at' => now(),
                     'price' => $basePrice,
                     'total_price' => $grandTotal,
                     'notes' => $finalNotes,
                     'prescription' => $finalPrescriptionData,
                 ];
-
             }
             // --- SECRETARY LOGIC ---
             else {
-
-                // Secretary sets it to 'finished'
-                // Secretary handles the MONEY
                 $paidAmount = $request->input('paid_amount', 0);
                 $remainingDue = $grandTotal - $paidAmount;
 
@@ -290,7 +308,6 @@ class AppointmentController extends Controller
 
                 $updateData = [
                     'status' => 'finished',
-                    // If the doctor hasn't set finished_at yet, set it now
                     'finished_at' => $appointment->finished_at ?? now(),
                     'price' => $basePrice,
                     'total_price' => $grandTotal,
@@ -311,30 +328,13 @@ class AppointmentController extends Controller
             ]);
         });
 
-        // Custom success message
         $msg = Auth::user()->role === 'doctor'
             ? 'Sent to secretary for payment.'
             : 'Appointment completed and closed.';
 
-
-
-        $flashAppointment = null;
-        if (session()->has('show_view_modal')) {
-            $flashAppointment = Appointment::with(['patient', 'services', 'history.user'])
-                ->find(session('show_view_modal'));
-        }
-
-        /*return view('secretary.appointments', compact(
-            'appointments',
-            'missedCount',
-            'allServices',
-            'templates',
-            'flashAppointment' // <--- Pass this to the view
-        ));*/
-
         return back()
-            ->with('success', $msg)                      // 1. The Success Alert
-            ->with('show_view_modal', $appointment->id); // 2. The Trigger to open the modal
+            ->with('success', $msg)
+            ->with('show_view_modal', $appointment->id);
     }
 
     public function updateStatus(Request $request, Appointment $appointment)
@@ -350,6 +350,31 @@ class AppointmentController extends Controller
         ]);
 
         return back()->with('success', 'Status updated successfully.');
+    }
+
+    public function showModal($id)
+    {
+        $appt = Appointment::with(['patient', 'services', 'history.user'])
+            ->where('clinic_id', Auth::user()->clinic_id)
+            ->findOrFail($id);
+
+        // Returns the FULL modal file (wrapper + content)
+        return view('layouts.partials.appointment_details_modal', compact('appt'));
+    }
+
+    public function showFinishModal($id)
+    {
+        $clinic_id = Auth::user()->clinic_id;
+        $appt = Appointment::with(['patient', 'services', 'history.user'])
+            ->where('clinic_id', $clinic_id)
+            ->findOrFail($id);
+
+        $templates = PrescriptionTemplate::where('clinic_id', $clinic_id)->get();
+        $allServices = MedicalService::where('clinic_id', $clinic_id)->get();
+
+
+        // Returns the FULL modal file (wrapper + content)
+        return view('layouts.partials.finish_appointment', compact('appt', 'templates', 'allServices'));
     }
 
     // ... existing methods (updateStatus, etc) ...

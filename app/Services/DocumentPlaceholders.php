@@ -28,7 +28,7 @@ class DocumentPlaceholders
 
         // 3. If it's an Appointment
         if ($model instanceof Appointment) {
-            $model->load(['patient', 'doctor.clinic', 'services']);
+            $model->load(['patient', 'doctor.clinic', 'invoiceItems']);
 
             if ($model->patient) {
                 $data = array_merge($data, self::mapPatient($model->patient));
@@ -85,8 +85,7 @@ class DocumentPlaceholders
             '{appt_type}' => ucfirst($a->type),
             '{appt_status}' => ucfirst($a->status),
             '{notes}' => $a->notes ?? '',
-            '{services_list}' => self::formatServices($a->services),
-
+            '{services_list}' => self::formatServices($a->invoiceItems),
             // [UPDATED] Pass the index to the formatter
             '{prescription}' => self::formatPrescription($a->prescription, $targetIndex),
 
@@ -100,9 +99,8 @@ class DocumentPlaceholders
         if ($services->isEmpty())
             return '';
 
-        return $services->map(function ($s) {
-            $price = $s->pivot ? $s->pivot->price : $s->price;
-            return "- {$s->name} (" . number_format($price, 0) . ")";
+        return $services->map(function ($item) {
+            return "- {$item->name} (" . number_format($item->price, 2) . " DH)";
         })->join("\n");
     }
 

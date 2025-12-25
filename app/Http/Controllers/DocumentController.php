@@ -182,6 +182,11 @@ class DocumentController extends Controller
 
         $placeholders = [];
 
+        $barcodeData = [
+            'a' => null, // Appointment Barcode Value
+            'p' => null, // Patient Barcode Value
+        ];
+
         // 2. Fetch Data Dynamically
         if ($modelType && $modelId) {
             $modelClass = match ($modelType) {
@@ -195,6 +200,12 @@ class DocumentController extends Controller
                 $dataModel = $modelClass::find($modelId);
                 if ($dataModel) {
                     $placeholders = DocumentPlaceholders::map($dataModel, $options);
+                    if ($dataModel instanceof \App\Models\Appointment) {
+                        $barcodeData['a'] = '~|a' . $dataModel->id . '|~';          // Format: a123
+                        $barcodeData['p'] = '~|p' . $dataModel->patient_id . '|~';  // Format: p456
+                    } elseif ($dataModel instanceof \App\Models\Patient) {
+                        $barcodeData['p'] = '~|p' . $dataModel->id . '|~';          // Format: p456
+                    }
                 }
             }
         }
@@ -213,6 +224,6 @@ class DocumentController extends Controller
             }
         }
 
-        return view('layouts.document_print', compact('document', 'elements', 'content'));
+        return view('layouts.document_print', compact('document', 'elements', 'content', 'barcodeData'));
     }
 }

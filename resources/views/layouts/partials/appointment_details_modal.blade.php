@@ -26,7 +26,7 @@
                                     </a>
                                 </div>
                                 <div
-                                    class="d-flex flex-wrap gap-2 text-muted x-small fw-bold text-uppercase tracking-wide">
+                                    class="d-flex flex-wrap gap-2 text-muted x-small small  text-uppercase tracking-wide">
                                     <span><i
                                             class="fa-solid fa-venus-mars me-1"></i>{{ ucfirst($appt->patient->gender) }}</span>
 
@@ -64,14 +64,14 @@
                                     $style = $statusStyles[$appt->status] ?? $statusStyles['scheduled'];
                                 @endphp
                                 <div
-                                    class="px-2 py-1 rounded-pill {{ $style['bg'] }} bg-opacity-10 {{ $style['text'] }} fw-bold x-small text-uppercase d-flex align-items-center gap-1">
+                                    class="px-2 py-1 rounded-pill {{ $style['bg'] }} bg-opacity-10 {{ $style['text'] }}  text-uppercase d-flex align-items-center gap-1 small ">
                                     <i class="fa-solid {{ $style['icon'] }}"></i>
                                     {{ str_replace('_', ' ', $appt->status) }}
                                 </div>
                             </div>
 
                             {{-- Date & Time --}}
-                            <div class="text-dark fw-bold">
+                            <div class="text-dark small fw-bold">
                                 {{ $appt->scheduled_at->format('l, d M Y') }}
                                 <span class="text-muted fw-normal ms-1">at
                                     {{ $appt->scheduled_at->format('H:i') }}</span>
@@ -197,16 +197,32 @@
 
                                     {{-- 2. Services List --}}
                                     {{-- Removed "Services Performed" Header text --}}
-                                    @if($appt->services->isNotEmpty())
-                                        @foreach($appt->services as $s)
+                                    {{-- Check if invoice items exist (Standard OR Custom) --}}
+                                    @if($appt->invoiceItems->isNotEmpty())
+
+                                        @foreach($appt->invoiceItems as $item)
                                             <div class="d-flex justify-content-between mb-1 small text-secondary">
-                                                <span>{{ $s->name }}</span>
-                                                <span
-                                                    class="fw-medium text-dark">{{ number_format($s->pivot->price, 2) }}</span>
+
+                                                <span>
+                                                    {{-- Optional: Add a small icon to distinguish custom entries --}}
+                                                    @if(!$item->medical_service_id)
+                                                        <i class="fa-solid fa-pen-nib me-1 opacity-50" title="Custom Service"></i>
+                                                    @endif
+
+                                                    {{-- Display Name: Uses the getNameAttribute() accessor we added to the
+                                                    model --}}
+                                                    {{ $item->name }}
+                                                </span>
+
+                                                <span class="fw-medium text-dark">
+                                                    {{-- Price is directly on the pivot row now --}}
+                                                    {{ number_format($item->price, 2) }}
+                                                </span>
+
                                             </div>
                                         @endforeach
-                                    @endif
 
+                                    @endif
                                     {{-- Grand Total --}}
                                     <div class="border-top border-dashed pt-3 mt-2 mb-4">
                                         <div class="d-flex justify-content-between align-items-end">

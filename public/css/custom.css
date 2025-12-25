@@ -177,8 +177,17 @@ a {
     padding: 8px 16px;
     display: flex;
     align-items: center;
-    width: 300px;
+    width: 400px;
 }
+
+
+.avatar-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
 
 .search-input {
     border: none;

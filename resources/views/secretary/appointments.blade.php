@@ -21,6 +21,8 @@
         </div>
     @endif
 
+
+
     {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
@@ -36,6 +38,8 @@
         </button>
     </div>
 
+
+
     {{-- SEARCH BAR --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-2">
@@ -48,6 +52,8 @@
             </div>
         </div>
     </div>
+
+
 
     {{-- APPOINTMENTS TABLE --}}
     <div class="card pb-3 border-0 shadow-sm overflow-visible">
@@ -139,7 +145,13 @@
                                         {{ substr($appt->patient->first_name, 0, 1) }}{{ substr($appt->patient->last_name, 0, 1) }}
                                     </div>
                                     <div>
-                                        <div class="fw-bold text-dark">{{ $appt->patient->full_name }}</div>
+                                        <div class="fw-bold text-dark">
+                                            <a href="{{ route('patients.show', $appt->patient->id) }}" target="_blank"
+                                                class="text-dark">
+                                                {{ $appt->patient->full_name }}
+                                                <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
+                                            </a>
+                                        </div>
                                         <div class="small text-muted"><i class="fa-solid fa-phone me-1"
                                                 style="font-size: 0.7rem;"></i>{{ $appt->patient->phone }}</div>
                                     </div>
@@ -210,14 +222,14 @@
                                         @if(auth()->user()->role === 'doctor')
                                             {{-- Doctor: Finish -> Pending Payment --}}
                                             <button class="btn btn-sm btn-primary fw-bold rounded-pill px-3 shadow-sm"
-                                                data-bs-toggle="modal" data-bs-target="#finishModal-{{ $appt->id }}">
+                                                onclick="openFullModal('{{ route('appointments.finish-modal', $appt->id) }}')">
                                                 <i class="fa-solid fa-check me-1"></i> Finish
                                             </button>
                                         @else
                                             {{-- Secretary: Force Finish -> Finished directly --}}
                                             {{-- Useful if doctor forgets to click finish --}}
                                             <button class="btn btn-sm btn-outline-dark fw-bold rounded-pill px-3 shadow-sm"
-                                                data-bs-toggle="modal" data-bs-target="#finishModal-{{ $appt->id }}"
+                                                onclick="openFullModal('{{ route('appointments.finish-modal', $appt->id) }}')"
                                                 title="Close consultation and collect payment">
                                                 <i class="fa-solid fa-check-double me-1"></i> Finish
                                             </button>
@@ -229,55 +241,38 @@
                                     @if($appt->status == 'pending_payment')
                                         @if(auth()->user()->role !== 'doctor')
                                             <button class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-3 shadow-sm"
-                                                data-bs-toggle="modal" data-bs-target="#finishModal-{{ $appt->id }}">
+                                                onclick="openFullModal('{{ route('appointments.finish-modal', $appt->id) }}')">
                                                 <i class="fa-solid fa-cash-register me-1"></i> Collect Payment
                                             </button>
-                                        @else
-                                            <span class="badge bg-info bg-opacity-10 text-info">Sent to Secretary</span>
                                         @endif
                                     @endif
 
-                                    {{-- Dropdown --}}
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-white border shadow-sm text-muted rounded-2"
-                                            data-bs-toggle="dropdown">
-                                            <i class="fa-solid fa-ellipsis-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
-                                            <li><button class="dropdown-item" data-bs-toggle="modal"
-                                                    data-bs-target="#viewModal-{{ $appt->id }}"><i
-                                                        class="fa-solid fa-eye text-primary me-2"></i> View Details</button>
-                                            </li>
-                                            @if(!in_array($appt->status, ['finished', 'cancelled']))
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li>
-                                                    <form action="{{ route('appointments.update_status', $appt->id) }}"
-                                                        method="POST">
-                                                        @csrf @method('PUT') <input type="hidden" name="status" value="cancelled">
-                                                        <button class="dropdown-item text-danger"><i
-                                                                class="fa-solid fa-xmark me-2"></i> Cancel</button>
-                                                    </form>
-                                                </li>
-                                            @endif
-                                        </ul>
-                                    </div>
+
+
+                                    @if(!in_array($appt->status, ['finished','pending_payment', 'cancelled']))
+                                        <form action="{{ route('appointments.update_status', $appt->id) }}" method="POST"
+                                            onsubmit="confirmCancel(event)">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="status" value="cancelled">
+
+                                            <button type="submit" class="btn btn-sm btn-outline-danger border shadow-sm">
+                                                <i class="fa-solid fa-xmark me-2"></i> Cancel
+                                            </button>
+                                        </form>
+                                    @endif
+
+
+                                    <button class="btn btn-sm btn-light border shadow-sm text-secondary"
+                                        onclick="openFullModal('{{ route('appointments.modal', $appt->id) }}')"
+                                        title="View Details">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+
+
+
+
                                 </div>
-
-                                {{-- =================================================== --}}
-                                {{-- NEW FINISH MODAL WITH PRESCRIPTION INTEGRATION --}}
-                                {{-- =================================================== --}}
-
-                                @include('layouts.partials.finish_appointment') {{-- Use your existing modal or add it back here
-                                --}}
-
-
-                                {{-- View Modal --}}
-                                @include('layouts.partials.appointment_details_modal') {{-- Use your existing modal or add it
-                                back here --}}
-
-
                             </td>
                         </tr>
                     @empty
@@ -297,33 +292,39 @@
     {{-- SCRIPTS --}}
     <script>
         const patientSearchRoute = "{{ route('api.patients.search') }}";
+
+
+        function confirmCancel(event) {
+            event.preventDefault(); // 1. Stop the form from submitting
+            const form = event.target; // 2. Grab the specific form that was submitted
+
+            Swal.fire({
+                title: 'Cancel Appointment?',
+                text: "This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545', // Bootstrap Danger Red
+                cancelButtonColor: '#6c757d',  // Bootstrap Secondary Grey
+                confirmButtonText: 'Yes, Cancel it',
+                cancelButtonText: 'Keep Appointment'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit(); // 3. Resume submission if confirmed
+                }
+            });
+        }
+
+
     </script>
     <script src="{{ asset('js/appointments.js') }}"></script>
     <script src="{{ asset('js/finish_appointment_modal.js') }}"></script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            @if(isset($appointments) && !$appointments->isEmpty())
-                @foreach($appointments as $appt)
-                    calculateTotal({{ $appt->id }});
-                @endforeach
-            @endif
-            attachPaymentListeners();
-        });
-    </script>
-
-
-
-    {{-- SPECIAL SECTION: Render the modal for the just-finished appointment --}}
+    {{-- SPECIAL SECTION: show the modal for the just-finished appointment --}}
     @if(isset($flashAppointment))
         {{-- Reuse your existing modal file for this specific appointment --}}
-        @include('layouts.partials.appointment_details_modal', ['appt' => $flashAppointment])
-
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                // Open the modal immediately
-                var myModal = new bootstrap.Modal(document.getElementById('viewModal-{{ $flashAppointment->id }}'));
-                myModal.show();
+            document.addEventListener('DOMContentLoaded', function () {
+                openFullModal('{{ route('appointments.modal', $flashAppointment->id) }}');
             });
         </script>
     @endif

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +8,19 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('js/custom-code-scanner.js') }}"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
     <aside class="sidebar" id="sidebar">
@@ -32,7 +35,8 @@
 
         <ul class="sidebar-menu list-unstyled">
             <li>
-                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}"
+                    class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-layer-group"></i>
                     Dashboard
                 </a>
@@ -49,13 +53,17 @@
 
         <div class="p-3 border-top border-light mt-auto">
             <div class="d-flex align-items-center gap-3 px-2">
-                <img src="https://ui-avatars.com/api/?name={{ Auth::user()->name }}&background=eff6ff&color=2563eb" 
-                     alt="User" class="rounded-circle border" width="40" height="40">
+                <img src="https://ui-avatars.com/api/?name={{ Auth::user()->name }}&background=eff6ff&color=2563eb"
+                    alt="User" class="rounded-circle border" width="40" height="40">
                 <div class="flex-grow-1 overflow-hidden">
-                    <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size: 0.875rem;">{{ Auth::user()->name }}</p>
-                    <p class="mb-0 text-muted text-truncate" style="font-size: 0.75rem;">{{ ucfirst(Auth::user()->role) }}</p>
+                    <p class="mb-0 fw-semibold text-dark text-truncate" style="font-size: 0.875rem;">
+                        {{ Auth::user()->name }}
+                    </p>
+                    <p class="mb-0 text-muted text-truncate" style="font-size: 0.75rem;">
+                        {{ ucfirst(Auth::user()->role) }}
+                    </p>
                 </div>
-                
+
                 <form action="{{ route('logout') }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-link text-muted p-0" title="Logout">
@@ -67,8 +75,10 @@
     </aside>
 
     <div class="main-wrapper">
-        
-        <header class="d-flex align-items-center justify-content-between px-4 py-3 bg-white bg-opacity-75 border-bottom border-light sticky-top" style="height: 80px; backdrop-filter: blur(10px);">
+
+        <header
+            class="d-flex align-items-center justify-content-between px-4 py-3 bg-white bg-opacity-75 border-bottom border-light sticky-top"
+            style="height: 80px; backdrop-filter: blur(10px);">
             <div class="d-flex align-items-center gap-3">
                 <button class="btn btn-light d-md-none text-muted" id="menuBtn">
                     <i class="fa-solid fa-bars"></i>
@@ -77,23 +87,37 @@
             </div>
 
             <div class="d-flex align-items-center gap-4">
-                <div class="search-wrapper d-none d-md-flex">
-                    <i class="fa-solid fa-magnifying-glass text-muted small"></i>
-                    <input type="text" class="search-input" placeholder="Search...">
+
+                <div class="search-wrapper d-none d-md-flex position-relative w-200 p-0" style="max-width: 400px;">
+
+                    <i class="fa-solid fa-magnifying-glass text-muted small position-absolute"
+                        style="left: 15px; top: 50%; transform: translateY(-50%);"></i>
+
+                    <input type="text" id="main-search-input" class="form-control border-0 bg-light ps-5 rounded-pill"
+                        placeholder="Search (Name, CIN, ID...)" autocomplete="off"
+                        data-route="{{ route('global.search') }}">
+
+                    <div id="global-search-results"
+                        class="dropdown-menu shadow-lg border-0 w-100 mt-2 rounded-4 overflow-hidden"
+                        style="display: none; position: absolute; top: 100%; left: 0; z-index: 1050;">
+                    </div>
                 </div>
+
 
                 <button class="btn p-2 position-relative text-muted">
                     <i class="fa-regular fa-bell fs-5"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" 
-                          style="width: 10px; height: 10px; top: 10px !important; left: 75% !important;"></span>
+                    <span
+                        class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
+                        style="width: 10px; height: 10px; top: 10px !important; left: 75% !important;"></span>
                 </button>
             </div>
         </header>
 
         <main class="flex-grow-1 overflow-auto p-4 p-lg-5">
             <div class="container-fluid p-0">
-                
-                <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055;">
+
+                <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3"
+                    style="z-index: 1055;">
                     @if(session('success'))
                         <div class="toast align-items-center text-bg-success border-0 fade show" role="alert">
                             <div class="d-flex">
@@ -101,19 +125,21 @@
                                     <i class="fa-solid fa-circle-check"></i>
                                     <div>{{ session('success') }}</div>
                                 </div>
-                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                                    data-bs-dismiss="toast"></button>
                             </div>
                         </div>
                     @endif
                 </div>
 
                 @yield('content')
-                
+
             </div>
         </main>
     </div>
 
-    <div class="mobile-overlay position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-50" id="overlay" style="z-index: 999; display: none;"></div>
+    <div class="mobile-overlay position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-50" id="overlay"
+        style="z-index: 999; display: none;"></div>
 
     <script>
         // Sidebar Toggle Logic
@@ -128,7 +154,7 @@
             }
         }
 
-        if(menuBtn) {
+        if (menuBtn) {
             menuBtn.addEventListener('click', toggleSidebar);
             overlay.addEventListener('click', toggleSidebar);
         }
@@ -141,5 +167,10 @@
             });
         });
     </script>
+
+
+    <script src="{{ asset('js/main.js') }}"></script>
+
 </body>
+
 </html>
