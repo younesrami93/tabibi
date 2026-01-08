@@ -54,6 +54,10 @@
                                     class="form-control form-control-sm" placeholder="First Name"></div>
                             <div class="col-6"><input type="text" name="new_last_name"
                                     class="form-control form-control-sm" placeholder="Last Name"></div>
+                            <div class="col-6"><input type="text" name="new_cin"
+                                    class="form-control form-control-sm" placeholder="CIN"></div>
+                            <div class="col-6"><input type="date" name="new_birth_date"
+                                    class="form-control form-control-sm" title="Birth Date"></div>
                             <div class="col-12"><input type="text" name="new_phone" class="form-control form-control-sm"
                                     placeholder="Phone Number"></div>
                             <div class="col-12">
@@ -62,6 +66,17 @@
                                     <option value="female">Female</option>
                                 </select>
                             </div>
+                            <div class="col-6">
+                                <select name="new_mutuelle_provider" class="form-select form-select-sm">
+                                    <option value="">No Insurance</option>
+                                    <option value="CNSS">CNSS</option>
+                                    <option value="CNOPS">CNOPS</option>
+                                    <option value="AXA">AXA</option>
+                                    <option value="RMA">RMA</option>
+                                </select>
+                            </div>
+                            <div class="col-6"><input type="text" name="new_mutuelle_number"
+                                    class="form-control form-control-sm" placeholder="Reg. Number"></div>
                         </div>
                     </div>
 

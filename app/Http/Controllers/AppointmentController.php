@@ -132,7 +132,10 @@ class AppointmentController extends Controller
             'patient_id' => 'nullable|exists:patients,id',
             'new_first_name' => 'required_without:patient_id|nullable|string',
             'new_last_name' => 'required_without:patient_id|nullable|string',
-
+            'new_cin' => 'nullable|string|max:20',
+            'new_birth_date' => 'nullable|date',
+            'new_mutuelle_provider' => 'nullable|string',
+            'new_mutuelle_number' => 'nullable|string',
             'scheduled_at' => 'required|date',
             'type' => 'required|in:consultation,control,urgency',
         ]);
@@ -150,7 +153,11 @@ class AppointmentController extends Controller
                         'first_name' => $request->new_first_name,
                         'last_name' => $request->new_last_name,
                         'phone' => $request->new_phone,
+                        'cin' => $request->new_cin,
+                        'birth_date' => $request->new_birth_date,
                         'gender' => $request->new_gender ?? 'male', // Default to save time
+                        'mutuelle_provider' => $request->new_mutuelle_provider,
+                        'mutuelle_number' => $request->new_mutuelle_number,
                         'current_balance' => 0,
                     ]);
                     $patientId = $patient->id;
