@@ -28,7 +28,8 @@ class AppointmentController extends Controller
                 $q->whereHas('patient', function ($p) use ($search) {
                     $p->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('cin', 'like', "$search");
                 })
                     ->orWhere('status', 'like', "%{$search}%");
             });
