@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/appointments/{id}/modal', [AppointmentController::class, 'showModal'])->name('appointments.modal');
         Route::get('/appointments/{id}/finish-modal', [AppointmentController::class, 'showFinishModal'])->name('appointments.finish-modal');
+        Route::get('/appointments/book_modal/', [AppointmentController::class, 'bookModal'])->name('appointments.book_modal');
+
     });
 
     // -------------------------------------------------------
@@ -120,6 +122,7 @@ Route::middleware('auth')->group(function () {
 
     });
 
+    //appointments.book_modal
 
     Route::get('/global-search', [DashboardController::class, 'globalSearch'])->name('global.search');
 });

@@ -391,6 +391,11 @@ class AppointmentController extends Controller
         return view('layouts.partials.appointment_details_modal', compact('appt'));
     }
 
+    public function bookModal()
+    {
+        return view('layouts.partials.book_modal');
+    }
+
     public function showFinishModal($id)
     {
         $clinic_id = Auth::user()->clinic_id;

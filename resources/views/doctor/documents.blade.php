@@ -1,19 +1,26 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-0">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
+
             <div>
-                <h4 class="mb-1 text-dark fw-bold">Document Manager</h4>
-                <p class="text-muted small mb-0">Manage your clinic's templates and medical files.</p>
+                <h4 class="mb-1 text-secondary">
+                    Document Manager
+                </h4>
+                <p class="text-muted small mb-0">
+                    Manage your clinic's templates and medical files.
+                </p>
             </div>
+
+
             <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createDocModal">
                 <i class="fa-solid fa-plus me-2"></i> Create Document
             </button>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-4 py-4">
             @forelse($documents as $doc)
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="card  border-0 shadow-sm hover-elevate transition">

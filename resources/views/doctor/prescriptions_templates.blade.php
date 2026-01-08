@@ -7,13 +7,17 @@
 
     {{-- HEADER SECTION --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+
         <div>
-            <h4 class="mb-1 fw-bold text-dark">
-                <i class="fa-solid fa-clipboard-list text-primary me-2"></i>Prescription Templates
+            <h4 class="mb-1 text-secondary">
+                Prescription Templates
             </h4>
-            <p class="text-muted small mb-0">Create standard protocols (e.g., "Flu Kit") to use instantly during appointments.</p>
+            <p class="text-muted small mb-0">
+                Create and manage standard prescription protocols for quick use during appointments.
+            </p>
         </div>
-        
+
+
         <button class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createTemplateModal">
             <i class="fa-solid fa-plus me-2"></i>New Template
         </button>
@@ -28,8 +32,8 @@
                     <span class="input-group-text bg-white border-0 ps-3">
                         <i class="fa-solid fa-magnifying-glass text-muted"></i>
                     </span>
-                    <input type="text" id="pageSearch" class="form-control border-0 bg-white" 
-                           placeholder="Search templates by name..." onkeyup="filterTemplates()">
+                    <input type="text" id="pageSearch" class="form-control border-0 bg-white"
+                        placeholder="Search templates by name..." onkeyup="filterTemplates()">
                 </div>
 
                 <div class="d-none d-md-block vr my-2 text-muted opacity-25"></div>
@@ -37,7 +41,8 @@
                 {{-- Filter Dropdown --}}
                 <div class="d-flex align-items-center px-2">
                     <span class="text-muted small fw-bold text-uppercase me-2 d-none d-md-block">Type:</span>
-                    <select id="typeFilter" class="form-select border-0 bg-white fw-medium py-1" style="min-width: 160px;" onchange="filterTemplates()">
+                    <select id="typeFilter" class="form-select border-0 bg-white fw-medium py-1" style="min-width: 160px;"
+                        onchange="filterTemplates()">
                         <option value="all">Show All</option>
                         <option value="medicine">Medicines Only</option>
                         <option value="test">Lab Tests Only</option>
@@ -79,27 +84,31 @@
                             <div class="card border-0 shadow-sm">
                                 <div class="card-body">
                                     <label class="form-label fw-bold text-dark small text-uppercase">Template Name</label>
-                                    <input type="text" id="templateName" class="form-control" placeholder="e.g., Seasonal Flu Kit">
+                                    <input type="text" id="templateName" class="form-control"
+                                        placeholder="e.g., Seasonal Flu Kit">
                                 </div>
                             </div>
 
                             {{-- Item Search --}}
                             <div class="card border-0 shadow-sm flex-grow-1">
                                 <div class="card-body d-flex flex-column">
-                                    <label class="form-label fw-bold text-dark small text-uppercase">Add Items to List</label>
+                                    <label class="form-label fw-bold text-dark small text-uppercase">Add Items to
+                                        List</label>
                                     <div class="position-relative">
                                         <div class="input-group">
-                                            <span class="input-group-text bg-light border me-0"><i class="fa-solid fa-search"></i></span>
-                                            <input type="text" id="catalogSearchInput" class="form-control bg-light border" 
-                                                   placeholder="Search medicine or test..." autocomplete="off">
+                                            <span class="input-group-text bg-light border me-0"><i
+                                                    class="fa-solid fa-search"></i></span>
+                                            <input type="text" id="catalogSearchInput" class="form-control bg-light border"
+                                                placeholder="Search medicine or test..." autocomplete="off">
                                         </div>
-                                        
+
                                         {{-- Dropdown Results --}}
-                                        <div id="catalogResults" class="list-group position-absolute w-100 mt-2 shadow-lg border-0" 
-                                             style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto;">
+                                        <div id="catalogResults"
+                                            class="list-group position-absolute w-100 mt-2 shadow-lg border-0"
+                                            style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto;">
                                         </div>
                                     </div>
-                                    
+
                                     <div class="mt-auto text-center p-3 text-muted opacity-50">
                                         <i class="fa-solid fa-arrow-pointer fa-2x mb-2"></i>
                                         <p class="small mb-0">Search and select items above to build your protocol.</p>
@@ -111,18 +120,21 @@
                         {{-- RIGHT: SELECTED ITEMS LIST --}}
                         <div class="col-lg-8">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                <div
+                                    class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                                     <span class="fw-bold text-dark">Selected Items</span>
-                                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3" id="itemCountBadge">0 items</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3"
+                                        id="itemCountBadge">0 items</span>
                                 </div>
-                                
+
                                 <div class="card-body p-0 position-relative">
                                     <div class="table-responsive" style="height: 400px; overflow-y: auto;">
                                         <table class="table align-middle mb-0 table-hover">
                                             <thead class="bg-light sticky-top" style="z-index: 5;">
                                                 <tr>
                                                     <th class="ps-4 text-muted fw-bold small text-uppercase">Item Name</th>
-                                                    <th width="45%" class="text-muted fw-bold small text-uppercase">Instruction / Note</th>
+                                                    <th width="45%" class="text-muted fw-bold small text-uppercase">
+                                                        Instruction / Note</th>
                                                     <th width="50"></th>
                                                 </tr>
                                             </thead>
@@ -147,7 +159,8 @@
 
                 {{-- Footer --}}
                 <div class="modal-footer border-top-0 pt-0 pe-4 pb-4 bg-light">
-                    <button type="button" class="btn btn-white text-muted border shadow-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-white text-muted border shadow-sm"
+                        data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" onclick="saveTemplate()">
                         <i class="fa-solid fa-save me-2"></i>Save Protocol
                     </button>
@@ -172,14 +185,14 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 container.style.opacity = '0.5';
-                fetch(`{{ route('prescriptions_templates.index') }}?q=${q}&type=${type}`, { 
-                    headers: { "X-Requested-With": "XMLHttpRequest" } 
+                fetch(`{{ route('prescriptions_templates.index') }}?q=${q}&type=${type}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
                 })
-                .then(res => res.text())
-                .then(html => {
-                    container.innerHTML = html;
-                    container.style.opacity = '1';
-                });
+                    .then(res => res.text())
+                    .then(html => {
+                        container.innerHTML = html;
+                        container.style.opacity = '1';
+                    });
             }, 300);
         }
 
@@ -203,19 +216,19 @@
                             data.forEach(item => {
                                 let btn = document.createElement('button');
                                 btn.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2 py-2';
-                                
+
                                 let badgeClass = (item.type === 'medicine') ? 'bg-success' : 'bg-info';
                                 let icon = (item.type === 'medicine') ? 'fa-pills' : 'fa-microscope';
 
                                 btn.innerHTML = `
-                                    <div class="icon-box ${badgeClass} bg-opacity-10 text-${badgeClass === 'bg-success' ? 'success' : 'info'} rounded-circle" style="width:32px; height:32px;">
-                                        <i class="fa-solid ${icon} small"></i>
-                                    </div>
-                                    <div class="lh-sm">
-                                        <div class="fw-bold text-dark">${item.name}</div>
-                                        <small class="text-muted" style="font-size: 11px;">${item.strength || 'No strength'}</small>
-                                    </div>
-                                `;
+                                        <div class="icon-box ${badgeClass} bg-opacity-10 text-${badgeClass === 'bg-success' ? 'success' : 'info'} rounded-circle" style="width:32px; height:32px;">
+                                            <i class="fa-solid ${icon} small"></i>
+                                        </div>
+                                        <div class="lh-sm">
+                                            <div class="fw-bold text-dark">${item.name}</div>
+                                            <small class="text-muted" style="font-size: 11px;">${item.strength || 'No strength'}</small>
+                                        </div>
+                                    `;
                                 btn.onclick = () => {
                                     addItemToTemplate(item);
                                     cInput.value = '';
@@ -237,9 +250,9 @@
                         cResults.appendChild(customBtn);
                     });
             });
-            
+
             // Close results when clicking outside
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (!cInput.contains(e.target) && !cResults.contains(e.target)) {
                     cResults.style.display = 'none';
                 }
@@ -260,7 +273,7 @@
                 let form = (item.form || '').toLowerCase();
                 let qty = item.default_quantity;
                 let unitText = item.form || 'unit(s)';
-                
+
                 if (form.includes('syrup') || form.includes('sirop')) unitText = 'Spoon(s)';
                 else if (form.includes('spray')) unitText = 'Puff(s)';
                 else if (form.includes('cream')) unitText = 'Application(s)';
@@ -278,28 +291,28 @@
 
             const tbody = document.getElementById('templateItemsBody');
             const tr = document.createElement('tr');
-            tr.id = `row-${newItem.tempId.toString().replace('.','-')}`; // Safe ID
-            
-            let iconHtml = newItem.catalog_item_id 
-                ? '<i class="fa-solid fa-check-circle text-success me-2"></i>' 
+            tr.id = `row-${newItem.tempId.toString().replace('.', '-')}`; // Safe ID
+
+            let iconHtml = newItem.catalog_item_id
+                ? '<i class="fa-solid fa-check-circle text-success me-2"></i>'
                 : '<i class="fa-regular fa-keyboard text-muted me-2"></i>';
 
             tr.innerHTML = `
-                <td class="ps-4">
-                    <div class="fw-medium text-dark">${iconHtml} ${newItem.name}</div>
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm border-light bg-light text-dark" 
-                           placeholder="e.g. 1 pill after lunch"
-                           value="${newItem.note}" 
-                           onchange="updateItemNote(${newItem.tempId}, this.value)">
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-sm text-danger opacity-50 hover-opacity-100" onclick="removeItem(${newItem.tempId})">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </td>
-            `;
+                    <td class="ps-4">
+                        <div class="fw-medium text-dark">${iconHtml} ${newItem.name}</div>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm border-light bg-light text-dark" 
+                               placeholder="e.g. 1 pill after lunch"
+                               value="${newItem.note}" 
+                               onchange="updateItemNote(${newItem.tempId}, this.value)">
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm text-danger opacity-50 hover-opacity-100" onclick="removeItem(${newItem.tempId})">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
             tbody.appendChild(tr);
             updateCount();
         }
@@ -312,10 +325,10 @@
         function removeItem(tempId) {
             let idx = addedItems.findIndex(i => i.tempId === tempId);
             if (idx > -1) addedItems.splice(idx, 1);
-            
-            let row = document.getElementById(`row-${tempId.toString().replace('.','-')}`);
-            if(row) row.remove();
-            
+
+            let row = document.getElementById(`row-${tempId.toString().replace('.', '-')}`);
+            if (row) row.remove();
+
             updateCount();
         }
 
@@ -324,7 +337,7 @@
             document.getElementById('itemCountBadge').innerText = count + ' items';
             if (count === 0) {
                 let emptyRow = document.getElementById('emptyRow');
-                if(emptyRow) emptyRow.style.display = 'table-row';
+                if (emptyRow) emptyRow.style.display = 'table-row';
             }
         }
 
@@ -380,15 +393,15 @@
                 },
                 body: JSON.stringify({ name: name, items: addedItems })
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    modal.hide();
-                    location.reload(); // Simple reload to show new item
-                } else {
-                    alert('Error saving template.');
-                }
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        modal.hide();
+                        location.reload(); // Simple reload to show new item
+                    } else {
+                        alert('Error saving template.');
+                    }
+                });
         }
     </script>
 

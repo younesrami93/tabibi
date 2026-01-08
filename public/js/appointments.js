@@ -226,88 +226,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// 5. BOOK APPOINTMENT MODAL (Legacy Logic)
-// ==========================================
-// Handles Patient Search inside the "New Appointment" modal
-
-const modalSearchInput = document.getElementById('patientSearchInput');
-const resultsBox = document.getElementById('searchResults');
-const patientIdInput = document.getElementById('patientIdInput');
-const newPatientForm = document.getElementById('newPatientForm');
-
-if (modalSearchInput) {
-    modalSearchInput.addEventListener('input', function () {
-        const query = this.value;
-        if (query.length < 2) { resultsBox.style.display = 'none'; return; }
-
-        // Use the route defined in Blade, or fallback
-        const searchUrl = (typeof patientSearchRoute !== 'undefined') ? patientSearchRoute : '/api/patients/search';
-
-        fetch(`${searchUrl}?q=${query}`)
-            .then(res => res.json())
-            .then(data => {
-                resultsBox.innerHTML = '';
-                if (data.length > 0) {
-                    resultsBox.style.display = 'block';
-                    data.forEach(p => {
-                        const item = document.createElement('button');
-                        item.type = 'button';
-                        item.className = 'list-group-item list-group-item-action text-start';
-                        item.innerHTML = `<strong>${p.first_name} ${p.last_name}</strong><small class='text-muted ms-2'>${p.phone || ''}</small>`;
-                        item.onclick = () => selectPatient(p);
-                        resultsBox.appendChild(item);
-                    });
-                } else { resultsBox.style.display = 'none'; }
-            });
-    });
-
-    // Close search results if clicking outside
-    document.addEventListener('click', function (e) {
-        if (!modalSearchInput.contains(e.target) && !resultsBox.contains(e.target)) {
-            resultsBox.style.display = 'none';
-        }
-    });
-}
-
-function selectPatient(patient) {
-    if(patientIdInput) patientIdInput.value = patient.id;
-    document.getElementById('selectedPatientName').innerText = `${patient.first_name} ${patient.last_name}`;
-    document.getElementById('selectedPatientDisplay').classList.remove('d-none');
-    document.getElementById('patientSearchGroup').classList.add('d-none');
-    resultsBox.style.display = 'none';
-    if (newPatientForm) newPatientForm.classList.add('d-none');
-}
-
-function resetPatientSelection() {
-    if(patientIdInput) patientIdInput.value = '';
-    document.getElementById('selectedPatientDisplay').classList.add('d-none');
-    document.getElementById('patientSearchGroup').classList.remove('d-none');
-    modalSearchInput.value = '';
-    modalSearchInput.focus();
-}
-
-function toggleNewPatientMode() {
-    if (!newPatientForm) return;
-    const isHidden = newPatientForm.classList.contains('d-none');
-    if (isHidden) {
-        newPatientForm.classList.remove('d-none');
-        if(patientIdInput) patientIdInput.value = '';
-        document.getElementById('patientSearchGroup').classList.add('d-none');
-        document.getElementById('selectedPatientDisplay').classList.add('d-none');
-    } else {
-        newPatientForm.classList.add('d-none');
-        document.getElementById('patientSearchGroup').classList.remove('d-none');
-    }
-}
-
-
-// ==========================================
-// 6. UTILITIES
+// 5. UTILITIES
 // ==========================================
 
 function confirmCancel(event) {
-    event.preventDefault(); 
-    const form = event.target; 
+    event.preventDefault();
+    const form = event.target;
 
     Swal.fire({
         title: 'Cancel Appointment?',
@@ -315,7 +239,7 @@ function confirmCancel(event) {
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d', 
+        cancelButtonColor: '#6c757d',
         confirmButtonText: 'Yes, Cancel it',
         cancelButtonText: 'Keep Appointment'
     }).then((result) => {

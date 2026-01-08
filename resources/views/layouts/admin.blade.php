@@ -86,7 +86,7 @@
                 <h1 class="h5 fw-bold text-dark mb-0 d-none d-sm-block">@yield('header', 'Dashboard')</h1>
             </div>
 
-            <div class="d-flex align-items-center gap-4">
+            <div class="d-flex align-items-center gap-2">
 
                 <div class="search-wrapper d-none d-md-flex position-relative w-200 p-0" style="max-width: 400px;">
 
@@ -103,6 +103,19 @@
                     </div>
                 </div>
 
+                {{-- Book Appointment Button --}}
+                <button class="btn btn-primary fw-bold shadow-sm d-none d-md-flex align-items-center"
+                    data-bs-toggle="modal" data-bs-target="#bookAppointmentModal">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="d-none d-lg-inline ps-2">Appointment</span>
+                </button>
+
+                <button class="btn btn-primary fw-bold shadow-sm text-nowrap" 
+                data-bs-toggle="modal" data-bs-target="#createPatientModal">
+                    <i class="fa-solid fa-user-plus me-2"></i>Patient
+                </button>
+
+                
 
                 <button class="btn p-2 position-relative text-muted">
                     <i class="fa-regular fa-bell fs-5"></i>
@@ -142,6 +155,9 @@
         style="z-index: 999; display: none;"></div>
 
     <script>
+
+        const patientSearchRoute = "{{ route('api.patients.search') }}";
+
         // Sidebar Toggle Logic
         const menuBtn = document.getElementById('menuBtn');
         const sidebar = document.getElementById('sidebar');
@@ -169,7 +185,20 @@
     </script>
 
 
+
+
     <script src="{{ asset('js/main.js') }}"></script>
+
+    {{-- Include Book Appointment Modal --}}
+    @include('layouts.partials.book_modal')
+
+    @include('layouts.partials.create_patient_modal')
+
+    {{-- Book Appointment Modal Scripts --}}
+
+
+    
+    {{-- CREATE MODAL --}}
 
 </body>
 

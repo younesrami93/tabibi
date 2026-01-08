@@ -93,3 +93,5 @@
         </form>
     </div>
 </div>
+
+<script src="{{ asset('js/book_modal.js') }}"></script>

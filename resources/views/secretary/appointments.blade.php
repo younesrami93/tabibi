@@ -6,15 +6,18 @@
 
     {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
-        <div>
-            <h4 class="mb-1 fw-bold text-dark">
-                <i class="fa-solid fa-calendar-check text-primary me-2"></i>Appointments
+      <div>
+            <h4 class="mb-1 text-secondary">
+                Appointments
             </h4>
+            <p class="text-muted small mb-0">
+                Manage and monitor patient appointments
+            </p>
         </div>
-        <button class="btn btn-primary fw-bold shadow-sm text-nowrap" data-bs-toggle="modal"
-            data-bs-target="#bookAppointmentModal">
-            <i class="fa-solid fa-plus me-2"></i>Book Appointment
-        </button>
+    
+    
+        <div>
+        </div>
     </div>
 
     {{-- FILTER CONTROLS --}}
@@ -134,10 +137,9 @@
     </div>
 
     {{-- INCLUDE MODALS & SCRIPTS --}}
-    @include('layouts.partials.book_modal')
+    <!--@include('layouts.partials.book_modal')-->
     <script>
         const fetchUrl = "{{ route('appointments.fetch') }}";
-        const patientSearchRoute = "{{ route('api.patients.search') }}";
     </script>
     <script src="{{ asset('js/appointments.js') }}"></script>
     <script src="{{ asset('js/finish_appointment_modal.js') }}"></script>
