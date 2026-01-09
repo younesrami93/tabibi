@@ -73,7 +73,33 @@
             @endif
         </td>
 
-        {{-- 5. Actions --}}
+        {{-- 5. PAYMENT (NEW COLUMN) --}}
+        <td>
+            <div class="d-flex flex-column align-items-start gap-1">
+                {{-- Show Total Price if > 0, else 'Free' --}}
+                @if($appt->total_price > 0)
+                    <span class="fw-bold text-dark" style="font-size: 0.9rem;">
+                        {{ number_format($appt->total_price, 2) }} <small class="text-muted">DH</small>
+                    </span>
+
+                    {{-- Credit / Paid Badge logic --}}
+                    @if($appt->due_amount > 0)
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill">
+                            Credit: {{ number_format($appt->due_amount, 2) }}
+                        </span>
+                    @else
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill">
+                            <i class="fa-solid fa-check me-1"></i> Paid
+                        </span>
+                    @endif
+                @else
+                    {{-- Free / Control / Unset --}}
+                    <span class="badge bg-light text-muted border rounded-pill">Free / -</span>
+                @endif
+            </div>
+        </td>
+
+        {{-- 6. Actions --}}
         <td class="text-end pe-4">
             <div class="d-flex justify-content-end gap-2 align-items-center">
 
@@ -116,6 +142,16 @@
                     </button>
                 @endif
 
+                {{-- CREDIT PAYMENT BUTTON --}}
+                @if($appt->status == 'finished' &&  $appt->due_amount > 0 && auth()->user()->role !== 'doctor')
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm border-2"
+                            onclick="openPaymentModal('{{ route('appointments.payment', $appt->id) }}', {{ $appt->due_amount }})"
+                            title="Pay Remaining Debt">
+                        <i class="fa-solid fa-coins me-1"></i> Pay
+                    </button>
+                @endif
+
                 {{-- Cancel --}}
                 @if(!in_array($appt->status, ['finished', 'pending_payment', 'cancelled']))
                     <form action="{{ route('appointments.update_status', $appt->id) }}" method="POST"
@@ -137,7 +173,7 @@
     </tr>
 @empty
     <tr>
-        <td colspan="5" class="text-center py-5 text-muted">
+        <td colspan="6" class="text-center py-5 text-muted">
             <div class="d-flex flex-column align-items-center">
                 <i class="fa-regular fa-calendar-xmark fs-3 mb-3 text-secondary"></i>
                 <span>No appointments found for this selection.</span>

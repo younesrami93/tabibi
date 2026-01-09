@@ -55,9 +55,3 @@
         <i class="fa-solid fa-cash-register"></i> Daily Caisse
     </a>
 </li>
-
-<li class="nav-item">
-    <a href="#" class="nav-link">
-        <i class="fa-solid fa-file-invoice"></i> Expenses
-    </a>
-</li>

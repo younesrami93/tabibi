@@ -9,7 +9,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
 
-            <h4 class="mb-0 text-secondary">Medical Catalog</h4>
+            <h4 class="fw-bold text-dark mb-1">Medical Catalog</h4>
             <p class="text-muted small mb-0">Manage your frequent medicines and tests presets.</p>
         </div>
 
@@ -49,7 +49,7 @@
     </div>
 
     {{-- SEARCH BAR (Full Width Row) --}}
-    <div class="card border-0 shadow-sm mb-4">
+    <div class="card  mb-4">
         <div class="card-body p-2">
             <div class="input-group">
                 <span class="input-group-text bg-white border-0 ps-3"><i
@@ -61,7 +61,7 @@
     </div>
 
     {{-- DYNAMIC LIST CONTAINER --}}
-    <div class="card border-0 shadow-sm overflow-hidden" id="catalogContainer" style="min-height: 300px;">
+    <div class="card overflow-hidden" id="catalogContainer" style="min-height: 300px;">
         @include('layouts.partials.catalog_list')
     </div>
 

@@ -8,7 +8,7 @@
     {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="mb-1 text-secondary">
+            <h4 class="fw-bold text-dark mb-1">
                 My Services
             </h4>
             <p class="text-muted small mb-0">Manage service pricing, duration, and insurance codes.</p>
@@ -20,7 +20,7 @@
     </div>
 
     {{-- SEARCH & FILTER CARD --}}
-    <div class="card border-0 shadow-sm mb-4">
+    <div class="card mb-4">
         <div class="card-body p-2">
             <form action="{{ route('services.index') }}" method="GET">
                 <div class="input-group">
@@ -36,7 +36,7 @@
     </div>
 
     {{-- TABLE CARD --}}
-    <div class="card border-0 shadow-sm overflow-hidden">
+    <div class="card overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">

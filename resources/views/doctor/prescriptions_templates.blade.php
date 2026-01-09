@@ -9,7 +9,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
 
         <div>
-            <h4 class="mb-1 text-secondary">
+            <h4 class="fw-bold text-dark mb-1">
                 Prescription Templates
             </h4>
             <p class="text-muted small mb-0">
@@ -24,7 +24,7 @@
     </div>
 
     {{-- SEARCH & FILTER CARD --}}
-    <div class="card border-0 shadow-sm mb-4">
+    <div class="card mb-4">
         <div class="card-body p-2">
             <div class="d-flex flex-column flex-md-row gap-2">
                 {{-- Search Bar --}}
@@ -54,7 +54,7 @@
     </div>
 
     {{-- LIST CONTAINER --}}
-    <div class="card overflow-hidden border-0 shadow-sm" id="templatesContainer" style="min-height: 200px;">
+    <div class="card overflow-hidden" id="templatesContainer" style="min-height: 200px;">
         @include('layouts.partials.prescriptions_template_list')
     </div>
 

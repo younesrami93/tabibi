@@ -78,11 +78,9 @@ class Appointment extends Model
         return $this->transactions()->where('type', 'income')->sum('amount');
     }
 
-    // Checks if fully paid based on Total Price vs Transactions
-    public function getIsSettledAttribute()
+    public function getHasCreditAttribute()
     {
-        // Floating point comparison safety
-        return ($this->total_price - $this->paid_amount) < 0.1;
+        return $this->due_amount > 0;
     }
 
 }

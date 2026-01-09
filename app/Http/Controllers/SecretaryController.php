@@ -12,16 +12,29 @@ class SecretaryController extends Controller
     /**
      * Display a list of secretaries belonging to MY clinic.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Get the current Doctor's Clinic ID
-        $clinicId = Auth::user()->clinic_id;
+        // 1. Base Query: Only secretaries in MY clinic
+        $query = User::where('clinic_id', auth()->user()->clinic_id)
+            ->where('role', 'secretary');
 
-        // 2. Fetch only 'secretary' roles for THIS clinic
-        $secretaries = User::where('clinic_id', $clinicId)
-            ->where('role', 'secretary')
-            ->latest()
-            ->get(); // Using get() since a clinic rarely has > 10 secretaries
+        // 2. Search Filter (Name or Email)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // 3. Status Filter (Active vs Inactive)
+        if ($request->filled('status') && $request->status !== 'all') {
+            $isActive = $request->status === 'active';
+            $query->where('is_active', $isActive);
+        }
+
+        // 4. Get Results (Pagination)
+        $secretaries = $query->latest()->paginate(10)->withQueryString();
 
         return view('doctor.secretaries', compact('secretaries'));
     }

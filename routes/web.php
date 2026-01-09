@@ -90,7 +90,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/appointments/{id}/modal', [AppointmentController::class, 'showModal'])->name('appointments.modal');
         Route::get('/appointments/{id}/finish-modal', [AppointmentController::class, 'showFinishModal'])->name('appointments.finish-modal');
         Route::get('/appointments/book_modal/', [AppointmentController::class, 'bookModal'])->name('appointments.book_modal');
-
+        Route::post('/appointments/{id}/payment', [AppointmentController::class, 'addPayment'])->name('appointments.payment');
+        Route::post('/patients/{id}/payment', [PatientController::class, 'addPayment'])->name('patients.payment');
     });
 
     // -------------------------------------------------------

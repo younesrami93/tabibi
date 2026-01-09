@@ -6,22 +6,18 @@
 
     {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
-      <div>
-            <h4 class="mb-1 text-secondary">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">
                 Appointments
             </h4>
             <p class="text-muted small mb-0">
                 Manage and monitor patient appointments
             </p>
         </div>
-    
-    
-        <div>
-        </div>
     </div>
 
     {{-- FILTER CONTROLS --}}
-    <div class="card overflow-hidden border-0 shadow-sm mb-4">
+    <div class="card overflow-hidden  mb-4">
 
         {{-- 1. SEARCH & TOGGLE --}}
         <div class="card-header bg-white p-3 border-bottom-0">
@@ -114,7 +110,7 @@
     </div>
 
     {{-- TABLE CONTAINER --}}
-    <div class="card overflow-hidden border-0 shadow-sm">
+    <div class="card overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
@@ -123,6 +119,7 @@
                         <th class="py-3 text-muted small fw-bold text-uppercase">Patient</th>
                         <th class="py-3 text-muted small fw-bold text-uppercase">Status</th>
                         <th class="py-3 text-muted small fw-bold text-uppercase">Type</th>
+                        <th class="py-3 text-muted small fw-bold text-uppercase">Payment</th>
                         <th class="text-end pe-4 py-3 text-muted small fw-bold text-uppercase">Actions</th>
                     </tr>
                 </thead>
@@ -135,6 +132,9 @@
             {{ $appointments->links() }}
         </div>
     </div>
+
+
+    @include('layouts.partials.payment_modal')
 
     {{-- INCLUDE MODALS & SCRIPTS --}}
     <!--@include('layouts.partials.book_modal')-->

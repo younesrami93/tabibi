@@ -340,7 +340,11 @@ class AppointmentController extends Controller
                 ->sum('amount');
 
             $remainingDue = $grandTotal - $totalPaidReal;
-            $isPaid = $remainingDue <= 0.1; // Float tolerance
+
+            // 3. Ensure we don't store negative due amounts (if overpaid)
+            $storedDue = max(0, $remainingDue);
+
+            $isPaid = $storedDue < 0.1; // Tolerance for float math
 
             // C. Update Patient Balance (Legacy Support)
             // If there is still a remaining balance, we add it to the patient's debt.
@@ -360,12 +364,12 @@ class AppointmentController extends Controller
                 'status' => 'finished',
                 'finished_at' => $appointment->finished_at ?? now(),
                 'price' => $basePrice,
-                // Quick Access Cache Columns:
                 'total_price' => $grandTotal,
                 'is_paid' => $isPaid,
-
                 'notes' => $request->notes,
                 'prescription' => $finalPrescriptionData,
+                'paid_amount' => $totalPaidReal,
+                'due_amount' => $storedDue,
             ];
 
             // Doctors usually just finish the medical part; Secretaries handle the money/closing.
@@ -435,6 +439,60 @@ class AppointmentController extends Controller
         // Returns the FULL modal file (wrapper + content)
         return view('layouts.partials.finish_appointment', compact('appt', 'templates', 'allServices'));
     }
+
+
+    public function addPayment(Request $request, $id)
+    {
+        $appointment = Appointment::findOrFail($id);
+
+        // 1. Validation: Ensure we don't pay more than what is owed
+        $maxPayable = $appointment->due_amount;
+
+        $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:' . $maxPayable],
+            'method' => 'required|in:cash,card,check,transfer',
+        ], [
+            'amount.max' => "You cannot pay more than the remaining debt (" . number_format($maxPayable, 2) . " DH).",
+        ]);
+
+        DB::transaction(function () use ($request, $appointment) {
+
+            // 2. Create the Transaction Record
+            Transaction::create([
+                'clinic_id' => $appointment->clinic_id,
+                'user_id' => Auth::id(),
+                'patient_id' => $appointment->patient_id,
+                'billable_type' => Appointment::class,
+                'billable_id' => $appointment->id,
+                'type' => 'income',
+                'amount' => $request->amount,
+                'category' => 'consultation',
+                'payment_method' => $request->method,
+                'transaction_date' => now(),
+                'notes' => 'Partial/Full payment for Appointment #' . $appointment->id,
+            ]);
+
+            // 3. Update Appointment Financials (Cache Columns)
+            // We increment paid_amount and decrement due_amount safely
+            $appointment->increment('paid_amount', $request->amount);
+            $appointment->decrement('due_amount', $request->amount);
+
+            // 4. Update Status if fully paid
+            if ($appointment->due_amount <= 0.1) {
+                $appointment->is_paid = true;
+                if ($appointment->status === 'pending_payment') {
+                    $appointment->status = 'finished';
+                }
+            }
+            $appointment->save();
+
+            // 5. Update Patient Global Balance (Reduce their debt)
+            $appointment->patient->decrement('current_balance', $request->amount);
+        });
+
+        return back()->with('success', 'Payment of ' . $request->amount . ' DH recorded successfully.');
+    }
+
 
     // ... existing methods (updateStatus, etc) ...
 }

@@ -8,7 +8,7 @@
     {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="mb-1 text-secondary">
+            <h4 class="fw-bold text-dark mb-1">
                 Patient Management
             </h4>
             <p class="text-muted small mb-0">View patient files, history, and schedule controls.</p>
@@ -19,24 +19,53 @@
        </div>
     </div>
 
-    {{-- SEARCH CARD --}}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-2">
-            <form action="{{ route('patients.index') }}" method="GET">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-0 ps-3">
-                        <i class="fa-solid fa-magnifying-glass text-muted"></i>
-                    </span>
-                    <input type="text" name="search" class="form-control border-0 bg-white" 
-                           placeholder="Search by CIN, Name, or Phone..." value="{{ request('search') }}">
-                    <button class="btn btn-primary fw-bold px-4 rounded-end-3 d-none" type="submit">Search</button>
+
+    {{-- SEARCH & FILTER CARD --}}
+    <div class="card mb-4">
+        <div class="card-body p-3">
+            <form action="{{ route('patients.index') }}" method="GET" class="row g-3">
+                
+                {{-- 1. Text Search --}}
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 ps-3 text-muted">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0 bg-light shadow-none" 
+                               placeholder="Search by CIN, Name, Phone..." 
+                               value="{{ request('search') }}">
+                    </div>
                 </div>
+
+                {{-- 2. Balance Filter --}}
+                <div class="col-md-4">
+                    <select name="balance_filter" class="form-select bg-light border-0 shadow-none text-secondary fw-bold" onchange="this.form.submit()">
+                        <option value="all">Show All Patients</option>
+                        <option value="debt" {{ request('balance_filter') == 'debt' ? 'selected' : '' }}>
+                            Has Credit (Unpaid)
+                        </option>
+                        <option value="clear" {{ request('balance_filter') == 'clear' ? 'selected' : '' }}>
+                            Fully Paid / Clear
+                        </option>
+                    </select>
+                </div>
+
+                {{-- 3. Reset Button --}}
+                <div class="col-md-2">
+                    <a href="{{ route('patients.index') }}" class="btn btn-light border w-100 text-muted fw-bold" title="Reset Filters">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </a>
+                </div>
+                
+                {{-- Hidden Submit for the text input --}}
+                <button type="submit" class="d-none"></button>
             </form>
         </div>
     </div>
 
+
     {{-- TABLE CARD --}}
-    <div class="card border-0 shadow-sm overflow-hidden">
+    <div class="card overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -91,15 +120,22 @@
                                     @endif
                                 </td>
                                 <td>
+
                                     @if($patient->current_balance > 0)
-                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3">
-                                            Credit: {{ number_format($patient->current_balance, 2) }}
-                                        </span>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-danger fw-bold rounded-pill shadow-sm"
+                                                onclick="openPaymentModal('{{ route('patients.payment', $patient->id) }}', {{ $patient->current_balance }})"
+                                                title="Pay Total Debt">
+                                            <i class="fa-solid fa-hand-holding-dollar me-1"></i> 
+                                            Pay {{ number_format($patient->current_balance, 2) }} DH
+                                        </button>
                                     @else
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">
-                                            Clear
+                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">
+                                            <i class="fa-solid fa-check me-1"></i> Clear
                                         </span>
                                     @endif
+
+
                                 </td>
 
                                 <td>
@@ -150,6 +186,7 @@
                                 </td>
 
                                 <td class="text-end pe-4">
+                                    
                                     <div class="d-flex justify-content-end gap-2">
                                         <button class="btn btn-sm btn-white border shadow-sm text-muted" 
                                                 data-bs-toggle="modal" 
@@ -268,6 +305,7 @@
         @endif
     </div>
 
+    @include('layouts.partials.payment_modal')
     
 
 @endsection

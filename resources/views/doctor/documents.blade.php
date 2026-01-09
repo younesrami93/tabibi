@@ -6,7 +6,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <div>
-                <h4 class="mb-1 text-secondary">
+                <h4 class="fw-bold text-dark mb-1">
                     Document Manager
                 </h4>
                 <p class="text-muted small mb-0">
@@ -23,7 +23,7 @@
         <div class="row g-4 py-4">
             @forelse($documents as $doc)
                 <div class="col-12 col-md-6 col-xl-3">
-                    <div class="card  border-0 shadow-sm hover-elevate transition">
+                    <div class="card   hover-elevate transition">
                         <a href="{{ route('documents.editor', $doc->id) }}" class="text-decoration-none text-dark">
                             <div class="card-body pb-0 text-center p-4">
                                 <div class="mb-3">
