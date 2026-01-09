@@ -12,6 +12,7 @@ use App\Http\Controllers\MedicalServiceController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PrescriptionTemplateController;
 use App\Http\Controllers\SecretaryController;
+use App\Http\Controllers\TransactionController;
 use App\Models\Patient;
 use Illuminate\Support\Facades\Route;
 
@@ -119,6 +120,12 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/api/images', [ClinicImageController::class, 'store'])->name('images.store');
         Route::delete('/api/images/{id}', [ClinicImageController::class, 'destroy'])->name('images.destroy');
+
+        // In routes/web.php, inside the middleware('role:doctor,secretary') group:
+
+        Route::get('/finance', [TransactionController::class, 'index'])->name('finance.index');
+        Route::post('/finance', [TransactionController::class, 'store'])->name('finance.store');
+        Route::delete('/finance/{id}', [TransactionController::class, 'destroy'])->name('finance.destroy');
 
     });
 

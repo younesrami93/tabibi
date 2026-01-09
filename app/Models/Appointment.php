@@ -66,4 +66,23 @@ class Appointment extends Model
     {
         return $this->type === 'control';
     }
+
+    // RELATIONS
+    public function transactions()
+    {
+        return $this->morphMany(Transaction::class, 'billable');
+    }
+
+    public function getPaidAmountAttribute()
+    {
+        return $this->transactions()->where('type', 'income')->sum('amount');
+    }
+
+    // Checks if fully paid based on Total Price vs Transactions
+    public function getIsSettledAttribute()
+    {
+        // Floating point comparison safety
+        return ($this->total_price - $this->paid_amount) < 0.1;
+    }
+
 }

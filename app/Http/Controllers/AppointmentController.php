@@ -2,9 +2,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\AppointmentHistory;
+use App\Models\AppointmentService;
 use App\Models\Patient;
 use App\Models\MedicalService;
 use App\Models\PrescriptionTemplate;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -242,9 +245,8 @@ class AppointmentController extends Controller
             // 1. PROCESS SERVICES (Standard & Custom)
             // ====================================================
 
-            // A. Clear old items first (This allows you to edit/update the invoice later)
-            // Make sure you have created the AppointmentService model as discussed
-            \App\Models\AppointmentService::where('appointment_id', $appointment->id)->delete();
+            // Clear old items first to allow editing/re-saving
+            AppointmentService::where('appointment_id', $appointment->id)->delete();
 
             $servicesTotal = 0;
             $itemsToInsert = [];
@@ -254,20 +256,16 @@ class AppointmentController extends Controller
                     $sPrice = $serviceData['price'] ?? 0;
                     $servicesTotal += $sPrice;
 
-                    // Prepare the row for the pivot table
                     $row = [
                         'appointment_id' => $appointment->id,
                         'price' => $sPrice,
                         'created_by' => auth()->id(),
                     ];
 
-                    // Case A: Standard Catalog Service (Has ID)
                     if (isset($serviceData['id'])) {
                         $row['medical_service_id'] = $serviceData['id'];
                         $row['custom_name'] = null;
-                    }
-                    // Case B: Custom Service (No ID, just text)
-                    elseif (isset($serviceData['custom_name'])) {
+                    } elseif (isset($serviceData['custom_name'])) {
                         $row['medical_service_id'] = null;
                         $row['custom_name'] = $serviceData['custom_name'];
                     }
@@ -276,13 +274,12 @@ class AppointmentController extends Controller
                 }
             }
 
-            // Bulk Insert all items into the updated table
             if (!empty($itemsToInsert)) {
-                \App\Models\AppointmentService::insert($itemsToInsert);
+                AppointmentService::insert($itemsToInsert);
             }
 
             // ====================================================
-            // 2. PROCESS PRESCRIPTIONS (Nested JSON)
+            // 2. PROCESS PRESCRIPTIONS
             // ====================================================
             $finalPrescriptionData = [];
             if ($request->has('prescriptions')) {
@@ -309,55 +306,76 @@ class AppointmentController extends Controller
             }
 
             // ====================================================
-            // 3. ROLE-BASED WORKFLOW & FINANCIALS
+            // 3. FINANCIALS & TRANSACTIONS (Centralized)
             // ====================================================
             $user = Auth::user();
 
             $basePrice = $request->price;
             $grandTotal = $basePrice + $servicesTotal;
 
-            // We keep notes clean now (No need to append custom services text here)
-            $finalNotes = $request->notes;
+            // A. Create Transaction (The Source of Truth)
+            // We record exactly what was paid NOW
+            $paidNow = $request->input('paid_amount', 0);
 
-            // --- DOCTOR LOGIC ---
-            if ($user->role === 'doctor') {
-                $updateData = [
-                    'status' => 'pending_payment',
-                    'finished_at' => now(),
-                    'price' => $basePrice,
-                    'total_price' => $grandTotal,
-                    'notes' => $finalNotes,
-                    'prescription' => $finalPrescriptionData,
-                ];
+            if ($paidNow > 0) {
+                Transaction::create([
+                    'clinic_id' => $user->clinic_id,
+                    'user_id' => $user->id,
+                    'patient_id' => $appointment->patient_id,
+                    'billable_type' => Appointment::class,
+                    'billable_id' => $appointment->id,
+                    'type' => 'income',
+                    'amount' => $paidNow,
+                    'category' => 'consultation',
+                    'transaction_date' => now(),
+                    'notes' => 'Payment received at finish',
+                ]);
             }
-            // --- SECRETARY LOGIC ---
-            else {
-                $paidAmount = $request->input('paid_amount', 0);
-                $remainingDue = $grandTotal - $paidAmount;
 
-                // Update Patient Debt only if Secretary does it
-                if ($remainingDue > 0) {
-                    $patient = $appointment->patient;
-                    $patient->current_balance += $remainingDue;
-                    $patient->save();
+            // B. Sync Appointment Cache (Total & Paid Status)
+            // We calculate total paid by summing ALL transactions for this appointment (including the one we just made)
+            $totalPaidReal = Transaction::where('billable_type', Appointment::class)
+                ->where('billable_id', $appointment->id)
+                ->where('type', 'income')
+                ->sum('amount');
+
+            $remainingDue = $grandTotal - $totalPaidReal;
+            $isPaid = $remainingDue <= 0.1; // Float tolerance
+
+            // C. Update Patient Balance (Legacy Support)
+            // If there is still a remaining balance, we add it to the patient's debt.
+            // (Note: This logic assumes 'finish' is a one-time charge event. 
+            //  It adds the Net Unpaid amount of this session to the patient's total debt).
+            if ($user->role !== 'doctor' && $remainingDue > 0) {
+                // Calculation: Cost ($grandTotal) - Payment ($paidNow) = New Debt Added
+                // We use $paidNow (this session's payment) to calculate the immediate debt increase.
+                $netDebtIncrease = $grandTotal - $paidNow;
+
+                if ($netDebtIncrease > 0) {
+                    $appointment->patient->increment('current_balance', $netDebtIncrease);
                 }
-
-                $updateData = [
-                    'status' => 'finished',
-                    'finished_at' => $appointment->finished_at ?? now(),
-                    'price' => $basePrice,
-                    'total_price' => $grandTotal,
-                    'notes' => $finalNotes,
-                    'prescription' => $finalPrescriptionData,
-                    'is_paid' => ($remainingDue <= 0),
-                ];
             }
 
-            // Apply Update
+            $updateData = [
+                'status' => 'finished',
+                'finished_at' => $appointment->finished_at ?? now(),
+                'price' => $basePrice,
+                // Quick Access Cache Columns:
+                'total_price' => $grandTotal,
+                'is_paid' => $isPaid,
+
+                'notes' => $request->notes,
+                'prescription' => $finalPrescriptionData,
+            ];
+
+            // Doctors usually just finish the medical part; Secretaries handle the money/closing.
+            if ($user->role === 'doctor') {
+                $updateData['status'] = 'pending_payment';
+            }
+
             $appointment->update($updateData);
 
-            // Log History
-            \App\Models\AppointmentHistory::create([
+            AppointmentHistory::create([
                 'appointment_id' => $appointment->id,
                 'status' => $updateData['status'],
                 'changed_by' => $user->id,

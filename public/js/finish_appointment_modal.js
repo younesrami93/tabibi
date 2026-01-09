@@ -34,7 +34,7 @@ function addServiceRow(apptId) {
                 <input type="hidden" name="services[${index}][id]" value="${id}">
                 <input type="text" class="form-control form-control-sm bg-white border-0 fw-bold" value="${name}" readonly>
             </td>
-            <td class="border-0" width="120">
+            <td class="border-0" width="140">
                 <div class="input-group input-group-sm">
                     <input type="number" step="0.01" class="form-control text-end price-input border-0 bg-light fw-bold" 
                            name="services[${index}][price]" value="${price}" 
