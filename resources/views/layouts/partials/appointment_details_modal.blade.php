@@ -136,9 +136,6 @@
                                                                 </span>
                                                             </div>
 
-                                                            {{-- Right: Print Button --}}
-                                                            {{-- We use ID 1 for the template as requested, and pass the appointment
-                                                            ID via query string --}}
                                                             <a href="{{ route('documents.print.type', 'prescription') }}?model=appointment&id={{ $appt->id }}&rx_index={{ $index }}"
                                                                 target="_blank"
                                                                 class="btn btn-sm btn-white border shadow-sm py-0 px-2 x-small fw-bold text-secondary"
@@ -234,51 +231,97 @@
                                     </div>
 
                                     {{-- Payment Status Box --}}
-                                    @if($appt->is_paid)
-                                        <div class="bg-success bg-opacity-10 text-success p-3 rounded-3 text-center">
-                                            <div class="fw-bold mb-1"><i class="fa-solid fa-check-circle me-2"></i>Paid in
-                                                Full</div>
-                                            <div class="small opacity-75">No balance due</div>
-                                        </div>
+                                    {{-- Payment Status Section --}}
+                                    @if(in_array($appt->status, ['pending_payment', 'finished']))
+                                        {{-- Eligible for Payment: Show actual status --}}
+                                        @if($appt->is_paid)
+                                            <div class="bg-success bg-opacity-10 text-success p-3 rounded-3 text-center border border-success border-opacity-25">
+                                                <div class="fw-bold mb-1">
+                                                    <i class="fa-solid fa-check-circle me-2"></i>Paid in Full
+                                                </div>
+                                                <div class="small opacity-75">No balance due</div>
+                                            </div>
+                                        @else
+                                            <div class="bg-warning bg-opacity-10 text-warning-emphasis p-3 rounded-3 text-center border border-warning border-opacity-25">
+                                                <div class="fw-bold mb-1">
+                                                    <i class="fa-solid fa-circle-exclamation me-2"></i>Payment Pending
+                                                </div>
+                                                <div class="small opacity-75">Remaining: {{ number_format($appt->due_amount, 2) }} DH</div>
+                                            </div>
+                                        @endif
                                     @else
-                                        <div
-                                            class="bg-warning bg-opacity-10 text-warning-emphasis p-3 rounded-3 text-center border border-warning border-opacity-25">
-                                            <div class="fw-bold mb-1"><i
-                                                    class="fa-solid fa-circle-exclamation me-2"></i>Payment Pending</div>
-                                            <div class="small opacity-75">Balance added to patient credit</div>
+                                        {{-- Not Eligible Yet: Show placeholder --}}
+                                        <div class="bg-light text-muted p-3 rounded-3 text-center border border-dashed">
+                                            <div class="fw-bold mb-1">
+                                                <i class="fa-solid fa-hourglass-start me-2"></i>Awaiting Consultation
+                                            </div>
+                                            <div class="small opacity-75">Fees will be calculated once finished</div>
                                         </div>
                                     @endif
                                 </div>
                             </div>
 
-                            {{-- Activity Log --}}
-                            <h6 class="text-uppercase text-muted small fw-bold mb-4 tracking-wide">Timeline</h6>
-                            <div class="ps-3 border-start border-2 ms-2 mb-4">
-                                @foreach($appt->history as $h)
-                                    <div class="position-relative mb-4 ps-4">
-                                        <span
-                                            class="position-absolute top-0 start-0 translate-middle bg-white border border-2 border-secondary rounded-circle"
-                                            style="width: 12px; height: 12px; margin-top: 6px; margin-left: -1px;"></span>
-                                        <div class="small fw-bold text-dark text-capitalize lh-1 mb-1">
-                                            {{ str_replace('_', ' ', $h->status) }}
-                                        </div>
-                                        <div class="text-muted small" style="font-size: 0.75rem;">
-                                            {{ $h->created_at->format('M d, H:i') }}
-                                            @if($h->user)
-                                                <span class="text-primary opacity-75">•
-                                                    {{ explode(' ', $h->user->name)[0] }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
+                            {{-- Timeline Toggle Link --}}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h6 class="text-uppercase text-muted small fw-bold mb-0 tracking-wide">Appointment Activity</h6>
+    <button class="btn btn-link btn-sm text-decoration-none p-0 fw-bold" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#appointmentTimeline" 
+            aria-expanded="false">
+        <i class="fa-solid fa-clock-rotate-left me-1"></i> View Timeline
+    </button>
+</div>
+
+{{-- Collapsible Timeline Content --}}
+<div class="collapse mt-3" id="appointmentTimeline">
+    <div class="ps-3 border-start border-2 ms-2 mb-4">
+        @foreach($appt->history as $h)
+            <div class="position-relative mb-4 ps-4">
+                {{-- Status Indicator Dot (Using Array instead of Match for safety) --}}
+                @php
+                    $statusColors = [
+                        'finished' => 'success',
+                        'cancelled' => 'danger',
+                        'in_consultation' => 'warning',
+                        'waiting' => 'primary',
+                    ];
+                    // Default to 'secondary' if status is not in the list
+                    $dotColor = $statusColors[$h->status] ?? 'secondary';
+                @endphp
+                
+                <span class="position-absolute top-0 start-0 translate-middle bg-white border border-2 border-{{ $dotColor }} rounded-circle"
+                      style="width: 14px; height: 14px; margin-top: 6px; margin-left: -1px; z-index: 1;"></span>
+                
+                {{-- Event Details --}}
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="small fw-bold text-dark text-capitalize lh-1 mb-1">
+                            {{ str_replace('_', ' ', $h->status) }}
+                        </div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">
+                            {{ $h->created_at->format('M d, Y • H:i') }}
+                        </div>
+                    </div>
+                    
+                    @if($h->user)
+                        <span class="badge bg-light text-primary border rounded-pill px-2" style="font-size: 0.65rem;">
+                            <i class="fa-solid fa-user-pen me-1"></i> {{ explode(' ', $h->user->name)[0] }}
+                        </span>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
 
                             {{-- Print Actions --}}
                             <div class="mt-auto">
                                 <div class="d-grid gap-2">
-                                    <button class="btn btn-outline-dark fw-bold shadow-sm" onclick="window.print()">
+                                    <a class="btn btn-outline-dark fw-bold shadow-sm"
+                                     href="{{ route('documents.print.type', 'invoice') }}?model=appointment&id={{ $appt->id }}" target="_blank">
                                         <i class="fa-solid fa-print me-2"></i>Print Summary
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
 

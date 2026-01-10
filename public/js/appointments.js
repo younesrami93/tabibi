@@ -97,9 +97,9 @@ function applyPreset(presetName) {
 
     // Special Logic: If the user clicked "Finished" tab, we can pre-fill the status
     if (presetName === 'finished') {
-        state.statuses = 'finished';
+        //state.statuses = 'finished';
     } else if (presetName === 'cancelled') {
-        state.statuses = 'cancelled';
+        //state.statuses = 'cancelled';
     }
 
     // Clear Advanced Inputs visually (to match internal reset)

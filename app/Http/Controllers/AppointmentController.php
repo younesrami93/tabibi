@@ -40,7 +40,10 @@ class AppointmentController extends Controller
 
         // 2. PRESET MODES (Quick Tabs)
         // These serve as "Base Rules" that can be overridden by specific filters below
-        $mode = $request->get('quick_filter', 'today_active'); // Default
+        // Note: Ensure your JS sends 'quick_filter' or 'filter_mode' matching this key.
+        // Based on your previous blade files, you might be using 'filter_mode', 
+        // so we check both to be safe, defaulting to 'today_active'.
+        $mode = $request->get('quick_filter', $request->get('filter_mode', 'today_active'));
 
         if ($mode === 'today_active') {
             // "My Workspace": Today only, hide finished/cancelled
@@ -50,6 +53,14 @@ class AppointmentController extends Controller
             if (!$request->filled('statuses')) {
                 $query->whereNotIn('status', ['finished', 'cancelled', 'no_show']);
             }
+        } elseif ($mode === 'finished') {
+            // "Finished": Show only completed appointments
+            $query->where('status', 'finished');
+
+        } elseif ($mode === 'cancelled') {
+            // "Cancelled": Show only cancelled appointments
+            $query->where('status', 'cancelled');
+
         } elseif ($mode === 'history') {
             // "Archives": Anything before today
             if (!$request->filled('date_from') && !$request->filled('date_to')) {
@@ -60,7 +71,7 @@ class AppointmentController extends Controller
 
         // 3. ADVANCED FILTERS (Overrides)
 
-        // A. Specific Statuses (e.g., "Show me only Cancelled")
+        // A. Specific Statuses (e.g., "Show me only Cancelled" selected in dropdown)
         if ($request->filled('statuses')) {
             $statuses = explode(',', $request->statuses);
             $query->whereIn('status', $statuses);
@@ -85,11 +96,10 @@ class AppointmentController extends Controller
         ");
 
         // Chronological sort
-        $query->orderBy('scheduled_at', 'desc'); // Newer first is usually better for lists, but switch to 'asc' if you prefer "Next up"
+        $query->orderBy('scheduled_at', 'desc');
 
         return $query;
     }
-
     public function index(Request $request)
     {
         $clinic = Auth::user()->clinic;

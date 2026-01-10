@@ -5,71 +5,105 @@
 
 @section('content')
 
+ <style>
+        .custom-tabs {
+            display: flex;
+            gap: 0.25rem;
+            border-bottom: none;
+            position: relative;
+            margin-bottom: -1px;
+            z-index: 10;
+        }
+
+        .custom-tabs .nav-link {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+            padding: .65rem 1.25rem;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.15s ease;
+            margin-bottom: 0px !important;
+            border-radius: .5rem .5rem 0 0 !important;
+        }
+
+        .custom-tabs .nav-link:hover {
+            background: #ffffff;
+            color: #0d6efd;
+        }
+
+        .custom-tabs .nav-link.active {
+            background: #ffffff;
+            color: #0d6efd;
+            border-color: #dee2e6;
+            border-bottom: 1px solid white;
+            z-index: 11;
+        }
+    </style>    
+
     {{-- HEADER --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
             <h4 class="fw-bold text-dark mb-1">
                 Patient Management
             </h4>
-            <p class="text-muted small mb-0">View patient files, history, and schedule controls.</p>
+            <p class="text-muted small mb-0">View patient files, history, and financial status.</p>
         </div>
         
-       <div>
-        
-       </div>
+        <div>
+        </div>
     </div>
 
 
-    {{-- SEARCH & FILTER CARD --}}
-    <div class="card mb-4">
+    {{-- 1. SEARCH CARD --}}
+    <div class="card  mb-5">
         <div class="card-body p-3">
-            <form action="{{ route('patients.index') }}" method="GET" class="row g-3">
+            <form action="{{ route('patients.index') }}" method="GET">
+                @if(request('balance_filter'))
+                    <input type="hidden" name="balance_filter" value="{{ request('balance_filter') }}">
+                @endif
                 
-                {{-- 1. Text Search --}}
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0 ps-3 text-muted">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                        </span>
-                        <input type="text" name="search" class="form-control border-start-0 bg-light shadow-none" 
-                               placeholder="Search by CIN, Name, Phone..." 
-                               value="{{ request('search') }}">
-                    </div>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 ps-3 text-muted">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control border-start-0 bg-white shadow-none" 
+                           placeholder="Search by CIN, Name, Phone..." 
+                           value="{{ request('search') }}">
+                    <button class="btn btn-primary fw-bold px-4" type="submit">Search</button>
                 </div>
-
-                {{-- 2. Balance Filter --}}
-                <div class="col-md-4">
-                    <select name="balance_filter" class="form-select bg-light border-0 shadow-none text-secondary fw-bold" onchange="this.form.submit()">
-                        <option value="all">Show All Patients</option>
-                        <option value="debt" {{ request('balance_filter') == 'debt' ? 'selected' : '' }}>
-                            Has Credit (Unpaid)
-                        </option>
-                        <option value="clear" {{ request('balance_filter') == 'clear' ? 'selected' : '' }}>
-                            Fully Paid / Clear
-                        </option>
-                    </select>
-                </div>
-
-                {{-- 3. Reset Button --}}
-                <div class="col-md-2">
-                    <a href="{{ route('patients.index') }}" class="btn btn-light border w-100 text-muted fw-bold" title="Reset Filters">
-                        <i class="fa-solid fa-rotate-left"></i> Reset
-                    </a>
-                </div>
-                
-                {{-- Hidden Submit for the text input --}}
-                <button type="submit" class="d-none"></button>
             </form>
         </div>
     </div>
 
+    {{-- 2. TABS (Upgraded UI) --}}
+    <ul class="nav custom-tabs ms-3" role="tablist">
 
-    {{-- TABLE CARD --}}
-    <div class="card overflow-hidden">
+        {{-- ALL PATIENTS --}}
+        <li class="nav-item">
+            <a href="{{ route('patients.index', array_merge(request()->all(), ['balance_filter' => 'all'])) }}"
+               class="nav-link {{ request('balance_filter', 'all') == 'all' ? 'active' : '' }}">
+                <i class="fa-solid fa-users me-2"></i>All Patients
+            </a>
+        </li>
+
+        {{-- DEBT --}}
+        <li class="nav-item">
+            <a href="{{ route('patients.index', array_merge(request()->all(), ['balance_filter' => 'debt'])) }}"
+               class="nav-link {{ request('balance_filter') == 'debt' ? 'active' : '' }}"
+               style="{{ request('balance_filter') == 'debt' ? 'color:#dc3545;' : '' }}">
+                <i class="fa-solid fa-circle-exclamation me-2"></i>Has Credit / Unpaid
+            </a>
+        </li>
+
+    </ul>
+
+    {{-- 3. TABLE CARD --}}
+    <div class="card border  rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-white border-bottom">
+                    <thead class="bg-light">
                         <tr>
                             <th class="ps-4 text-muted fw-bold small text-uppercase py-3">Patient Name</th>
                             <th class="text-muted fw-bold small text-uppercase py-3">Contact Info</th>
@@ -81,13 +115,16 @@
                             <th class="text-end pe-4 text-muted fw-bold small text-uppercase py-3">Actions</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @forelse($patients as $patient)
-                            <tr>
+                            <tr onclick="window.location='{{ route('patients.show', $patient->id) }}'" style="cursor: pointer;">
+                                
+                                {{-- NAME --}}
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
                                         <div class="avatar-circle me-3 bg-{{ $patient->gender == 'male' ? 'primary' : 'danger' }} bg-opacity-10 text-{{ $patient->gender == 'male' ? 'primary' : 'danger' }} fw-bold d-flex justify-content-center align-items-center rounded-circle border border-{{ $patient->gender == 'male' ? 'primary' : 'danger' }} border-opacity-25"
-                                            style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                             style="width: 40px; height: 40px; font-size: 0.9rem;">
                                             {{ substr($patient->first_name, 0, 1) }}{{ substr($patient->last_name, 0, 1) }}
                                         </div>
                                         <div>
@@ -96,6 +133,8 @@
                                         </div>
                                     </div>
                                 </td>
+
+                                {{-- CONTACT --}}
                                 <td>
                                     <div class="d-flex flex-column small">
                                         <div class="mb-1 text-dark">
@@ -106,10 +145,14 @@
                                         </div>
                                     </div>
                                 </td>
+
+                                {{-- AGE / GENDER --}}
                                 <td>
                                     <div class="fw-medium text-dark">{{ $patient->age }} Years</div>
                                     <small class="text-muted text-capitalize">{{ $patient->gender }}</small>
                                 </td>
+
+                                {{-- MUTUELLE --}}
                                 <td>
                                     @if($patient->mutuelle_provider)
                                         <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
@@ -119,12 +162,13 @@
                                         <span class="text-muted small opacity-50">-</span>
                                     @endif
                                 </td>
-                                <td>
 
+                                {{-- BALANCE --}}
+                                <td>
                                     @if($patient->current_balance > 0)
                                         <button type="button" 
                                                 class="btn btn-sm btn-outline-danger fw-bold rounded-pill shadow-sm"
-                                                onclick="openPaymentModal('{{ route('patients.payment', $patient->id) }}', {{ $patient->current_balance }})"
+                                                onclick="event.stopPropagation(); openPaymentModal('{{ route('patients.payment', $patient->id) }}', {{ $patient->current_balance }})"
                                                 title="Pay Total Debt">
                                             <i class="fa-solid fa-hand-holding-dollar me-1"></i> 
                                             Pay {{ number_format($patient->current_balance, 2) }} DH
@@ -134,10 +178,9 @@
                                             <i class="fa-solid fa-check me-1"></i> Clear
                                         </span>
                                     @endif
-
-
                                 </td>
 
+                                {{-- STATUS --}}
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="badge bg-secondary bg-opacity-10 text-dark rounded-pill">
@@ -151,6 +194,7 @@
                                     </div>
                                 </td>
 
+                                {{-- NEXT CONTROL --}}
                                 <td>
                                     @if($patient->nextControl)
                                         <div class="d-flex align-items-center justify-content-between gap-2">
@@ -175,7 +219,8 @@
                                                 @csrf @method('PUT')
                                                 <button type="submit" class="btn btn-sm btn-success bg-opacity-10 text-success border-0 rounded-circle" 
                                                         style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
-                                                        title="Mark Done Today">
+                                                        title="Mark Done Today"
+                                                        onclick="event.stopPropagation()">
                                                     <i class="fa-solid fa-check" style="font-size: 0.8rem;"></i>
                                                 </button>
                                             </form>
@@ -185,119 +230,44 @@
                                     @endif
                                 </td>
 
+                                {{-- ACTIONS --}}
                                 <td class="text-end pe-4">
-                                    
                                     <div class="d-flex justify-content-end gap-2">
-                                        <button class="btn btn-sm btn-white border shadow-sm text-muted" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#editPatientModal{{ $patient->id }}" 
-                                                title="Edit Details">
+
+                                        <button type="button" class="btn btn-sm btn-light border text-secondary shadow-sm" 
+                                                onclick="event.stopPropagation(); openFullModal('{{ route('patients.edit_modal', $patient->id) }}')"
+                                                title="Edit Profile">
                                             <i class="fa-solid fa-pen"></i>
                                         </button>
+
                                         <a href="{{ route('patients.show', $patient->id) }}"
-                                            class="btn btn-sm btn-white border shadow-sm text-primary" 
-                                            title="View History">
-                                            <i class="fa-solid fa-file-medical"></i>
+                                           class="btn btn-sm btn-light border text-secondary shadow-sm rounded-circle d-flex align-items-center justify-content-center" 
+                                           style="width: 32px; height: 32px;"
+                                           title="View Profile"
+                                           onclick="event.stopPropagation()">
+                                            <i class="fa-solid fa-eye"></i>
                                         </a>
+
                                     </div>
                                 </td>
                             </tr>
 
-                            {{-- EDIT MODAL --}}
-                            <div class="modal fade" id="editPatientModal{{ $patient->id }}" tabindex="-1">
-                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                    <form action="{{ route('patients.update', $patient->id) }}" method="POST">
-                                        @csrf @method('PUT')
-                                        <div class="modal-content border-0 shadow-lg">
-                                            <div class="modal-header border-bottom-0 pb-0">
-                                                <div>
-                                                    <h5 class="modal-title fw-bold">Edit Patient File</h5>
-                                                    <p class="text-muted small mb-0">Update information for {{ $patient->full_name }}</p>
-                                                </div>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body p-4">
-                                                <div class="row g-3">
-                                                    {{-- Personal Info --}}
-                                                    <div class="col-12"><h6 class="fw-bold text-primary small text-uppercase border-bottom pb-2 mb-0">Personal Information</h6></div>
-                                                    
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold text-muted">First Name</label>
-                                                        <input type="text" name="first_name" class="form-control" value="{{ $patient->first_name }}" required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold text-muted">Last Name</label>
-                                                        <input type="text" name="last_name" class="form-control" value="{{ $patient->last_name }}" required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold text-muted">CIN (ID)</label>
-                                                        <input type="text" name="cin" class="form-control" value="{{ $patient->cin }}">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold text-muted">Phone Number</label>
-                                                        <input type="text" name="phone" class="form-control" value="{{ $patient->phone }}">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold text-muted">Birth Date</label>
-                                                        <input type="date" name="birth_date" class="form-control" value="{{ $patient->birth_date ? $patient->birth_date->format('Y-m-d') : '' }}">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold text-muted">Gender</label>
-                                                        <select name="gender" class="form-select">
-                                                            <option value="male" {{ $patient->gender == 'male' ? 'selected' : '' }}>Male</option>
-                                                            <option value="female" {{ $patient->gender == 'female' ? 'selected' : '' }}>Female</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {{-- Insurance --}}
-                                                    <div class="col-12 mt-4"><h6 class="fw-bold text-primary small text-uppercase border-bottom pb-2 mb-0">Insurance (Mutuelle)</h6></div>
-
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold text-muted">Provider</label>
-                                                        <select name="mutuelle_provider" class="form-select">
-                                                            <option value="">None</option>
-                                                            <option value="CNSS" {{ $patient->mutuelle_provider == 'CNSS' ? 'selected' : '' }}>CNSS</option>
-                                                            <option value="CNOPS" {{ $patient->mutuelle_provider == 'CNOPS' ? 'selected' : '' }}>CNOPS</option>
-                                                            <option value="AXA" {{ $patient->mutuelle_provider == 'AXA' ? 'selected' : '' }}>AXA</option>
-                                                            <option value="RMA" {{ $patient->mutuelle_provider == 'RMA' ? 'selected' : '' }}>RMA</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold text-muted">Registration Number</label>
-                                                        <input type="text" name="mutuelle_number" class="form-control" value="{{ $patient->mutuelle_number }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer border-top-0 pt-0 pe-4 pb-4">
-                                                <button type="button" class="btn btn-light text-danger me-auto border shadow-sm"
-                                                    onclick="if(confirm('Are you sure you want to archive this patient?')) document.getElementById('delete-pat-{{ $patient->id }}').submit()">
-                                                    <i class="fa-solid fa-box-archive me-2"></i>Archive
-                                                </button>
-                                                
-                                                <button type="button" class="btn btn-white border text-muted shadow-sm" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-primary fw-bold shadow-sm px-4">Save Changes</button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                    <form id="delete-pat-{{ $patient->id }}" action="{{ route('patients.destroy', $patient->id) }}" method="POST" class="d-none">
-                                        @csrf @method('DELETE')
-                                    </form>
-                                </div>
-                            </div>
                         @empty
                             <tr>
                                 <td colspan="8" class="text-center py-5">
                                     <div class="text-muted opacity-50">
                                         <i class="fa-solid fa-users-slash fa-3x mb-3"></i>
-                                        <p class="mb-0">No patients found. Click "Add New Patient" to get started.</p>
+                                        <p class="mb-0">No patients found.</p>
                                     </div>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
+
                 </table>
             </div>
         </div>
+
         @if($patients->hasPages())
             <div class="card-footer bg-white border-top p-3">
                 {{ $patients->links() }}
@@ -305,7 +275,32 @@
         @endif
     </div>
 
+    {{-- MODALS & SCRIPTS --}}
     @include('layouts.partials.payment_modal')
-    
+
+    <div id="dynamic-modal-container"></div>
+    <script>
+        function openEditPatientModal(url) {
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    const container = document.getElementById('dynamic-modal-container');
+                    container.innerHTML = html;
+                    const modal = new bootstrap.Modal(container.querySelector('.modal'));
+                    modal.show();
+                });
+        }
+
+        function openCreatePatientModal(url) {
+             fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    const container = document.getElementById('dynamic-modal-container');
+                    container.innerHTML = html;
+                    const modal = new bootstrap.Modal(container.querySelector('.modal'));
+                    modal.show();
+                });
+        }
+    </script>
 
 @endsection

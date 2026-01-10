@@ -128,19 +128,33 @@ class PatientController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // 1. Secure Fetch (Scoped to Clinic)
         $patient = Patient::where('id', $id)
             ->where('clinic_id', Auth::user()->clinic_id)
             ->firstOrFail();
 
-        $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
+        // 2. Strict Validation
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:50',
+            'last_name' => 'required|string|max:50',
+            'cin' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20',
+            'birth_date' => 'nullable|date',
             'gender' => 'required|in:male,female',
+
+            // Insurance Fields
+            'mutuelle_provider' => 'nullable|string|max:50',
+            'mutuelle_number' => 'nullable|string|max:50',
+
+            'address' => 'nullable|string|max:500',
+            'medical_history' => 'nullable|string|max:5000',
         ]);
 
-        $patient->update($request->all());
+        
+        // 3. Safe Update
+        $patient->update($validated);
 
-        return back()->with('success', 'Patient details updated.');
+        return back()->with('success', 'Patient profile updated successfully.');
     }
 
     /**
@@ -223,5 +237,13 @@ class PatientController extends Controller
 
         return back()->with('success', 'Payment recorded and distributed to oldest debts.');
     }
+
+
+    public function editModal($id)
+    {
+        $patient = Patient::where('clinic_id', Auth::user()->clinic_id)->findOrFail($id);
+        return view('layouts.partials.edit_patient_modal', compact('patient'));
+    }
+
 
 }

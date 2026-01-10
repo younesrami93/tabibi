@@ -92,6 +92,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/appointments/book_modal/', [AppointmentController::class, 'bookModal'])->name('appointments.book_modal');
         Route::post('/appointments/{id}/payment', [AppointmentController::class, 'addPayment'])->name('appointments.payment');
         Route::post('/patients/{id}/payment', [PatientController::class, 'addPayment'])->name('patients.payment');
+        Route::get('/patients/{id}/edit-modal', [PatientController::class, 'editModal'])->name('patients.edit_modal');
     });
 
     // -------------------------------------------------------

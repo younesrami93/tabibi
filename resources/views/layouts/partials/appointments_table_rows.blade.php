@@ -164,7 +164,7 @@
                 @endif
 
                 {{-- View Details --}}
-                <button class="btn btn-sm btn-light border shadow-sm text-secondary"
+                <button class="btn btn-sm btn-light border rounded-circle  shadow-sm text-secondary"
                     onclick="openFullModal('{{ route('appointments.modal', $appt->id) }}')">
                     <i class="fa-solid fa-eye"></i>
                 </button>

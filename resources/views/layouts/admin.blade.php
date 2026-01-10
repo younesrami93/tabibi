@@ -79,7 +79,7 @@
     <div class="main-wrapper">
 
         <header
-            class="d-flex align-items-center justify-content-between px-4 py-3 bg-white bg-opacity-75 border-bottom border-light sticky-top"
+            class="d-flex align-items-center justify-content-between px-4 py-3 bg-white bg-opacity-75 border-bottom shadow-sm sticky-top"
             style="height: 80px; backdrop-filter: blur(10px);">
             <div class="d-flex align-items-center gap-3">
                 <button class="btn btn-light d-md-none text-muted" id="menuBtn">
